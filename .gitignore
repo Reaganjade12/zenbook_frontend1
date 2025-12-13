@@ -1,0 +1,22 @@
+# Configuration (user should configure this)
+config.local.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies (if using package manager)
+node_modules/
+package-lock.json
+yarn.lock

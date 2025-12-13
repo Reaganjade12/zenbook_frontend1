@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Setup - ZenBook</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #f1f5f9;
+        }
+        .container {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #3b82f6;
+        }
+        p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            color: #f1f5f9;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Frontend Setup</h1>
+        <p>Configure your API endpoints to connect to the Laravel backend.</p>
+        
+        <form id="setupForm">
+            <div class="form-group">
+                <label for="apiUrl">API Base URL</label>
+                <input 
+                    type="text" 
+                    id="apiUrl" 
+                    placeholder="http://127.0.0.1:8000/api"
+                    value="http://127.0.0.1:8000/api"
+                    required
+                >
+                <small style="color: #94a3b8; font-size: 12px; display: block; margin-top: 5px;">
+                    Your Laravel backend API URL (include /api at the end)
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="storageUrl">Storage URL</label>
+                <input 
+                    type="text" 
+                    id="storageUrl" 
+                    placeholder="http://127.0.0.1:8000/storage"
+                    value="http://127.0.0.1:8000/storage"
+                    required
+                >
+                <small style="color: #94a3b8; font-size: 12px; display: block; margin-top: 5px;">
+                    Your Laravel storage URL for images
+                </small>
+            </div>
+            
+            <button type="submit">Save Configuration</button>
+        </form>
+        
+        <div class="info">
+            <strong>💡 Tip:</strong> For production, use your actual backend domain:
+            <br>• API: https://api.yourdomain.com/api
+            <br>• Storage: https://api.yourdomain.com/storage
+        </div>
+        
+        <div class="success" id="successMsg">
+            ✅ Configuration saved successfully! You can now use the application.
+        </div>
+    </div>
+    
+    <script>
+        // Load existing config if available
+        if (window.CONFIG) {
+            document.getElementById('apiUrl').value = window.CONFIG.API_BASE_URL || '';
+            document.getElementById('storageUrl').value = window.CONFIG.STORAGE_URL || '';
+        }
+        
+        document.getElementById('setupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+            const storageUrl = document.getElementById('storageUrl').value.trim();
+            
+            // Update config.js content
+            const configContent = `/**
+ * Frontend Configuration
+ * Update this file with your Laravel backend API URL
+ */
+
+// API Configuration
+const CONFIG = {
+    // Update this to your Laravel backend URL
+    // For local development: 'http://127.0.0.1:8000'
+    // For production: 'https://your-backend-domain.com'
+    API_BASE_URL: '${apiUrl}',
+    
+    // Storage URL for images (if different from API base)
+    STORAGE_URL: '${storageUrl}',
+};
+
+// Make config available globally
+window.CONFIG = CONFIG;
+`;
+            
+            // Create a blob and download it
+            const blob = new Blob([configContent], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'config.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            document.getElementById('successMsg').style.display = 'block';
+            
+            // Also save to localStorage for immediate use
+            localStorage.setItem('api_base_url', apiUrl);
+            localStorage.setItem('storage_url', storageUrl);
+            
+            alert('Configuration saved! Replace the config.js file in your project with the downloaded file.');
+        });
+    </script>
+</body>
+</html>
