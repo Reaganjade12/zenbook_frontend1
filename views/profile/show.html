@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Profile - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common-layout.css">
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div class="container">
+        <div class="card" style="max-width: 900px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <div style="font-size: 48px; margin-bottom: 10px; color: var(--text-light);">👤</div>
+                <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 800; color: white;">My Profile</h1>
+                <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Manage your account information</p>
+            </div>
+            
+            <div id="messageContainer"></div>
+            
+            <!-- Profile Header Card -->
+            <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 20px; padding: 40px; margin-bottom: 30px; text-align: center; color: white; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                
+                <div style="position: relative; z-index: 1;">
+                    <div style="position: relative; display: inline-block; margin-bottom: 20px;">
+                        <img 
+                            id="profile-image-preview" 
+                            src="" 
+                            alt="Profile Image" 
+                            style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 10px 40px rgba(0,0,0,0.2);"
+                            onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27150%27 height=%27150%27%3E%3Crect fill=%27%23ffffff%27 width=%27150%27 height=%27150%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23334155%27 font-family=%27Arial%27 font-size=%2740%27%3E👤%3C/text%3E%3C/svg%3E';"
+                        >
+                        <label for="profile_image" style="position: absolute; bottom: 5px; right: 5px; background: white; color: #3b82f6; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s ease; font-size: 18px;" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'">
+                            📷
+                        </label>
+                    </div>
+                    <h2 id="profile-name" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; color: white;"></h2>
+                    <p id="profile-role" style="margin: 8px 0 0 0; opacity: 0.9; font-size: 15px;"></p>
+                    
+                    <button id="deleteImageBtn" onclick="deleteProfileImage()" class="btn" style="display: none; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 8px 20px; font-size: 13px; border-radius: 20px; margin-top: 15px;">Remove Image</button>
+                </div>
+            </div>
+
+            <form id="profileUpdateForm">
+                <!-- File input for profile image (inside form) -->
+                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                
+                <!-- Personal Information Card -->
+                <div style="background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 30px; margin-bottom: 25px; border: 1px solid var(--dark-border);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                        <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">👤</div>
+                        <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Personal Information</h3>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label for="name">👤 Full Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">📧 Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">📱 Phone Number</label>
+                            <input type="tel" id="phone" name="phone" placeholder="Enter your phone number">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information Card -->
+                <div style="background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 30px; margin-bottom: 25px; border: 1px solid var(--dark-border);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                        <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">📍</div>
+                        <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Additional Information</h3>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="address">🏠 Address</label>
+                        <textarea id="address" name="address" rows="3" placeholder="Enter your address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bio">📝 Bio / About Me</label>
+                        <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Account Information Card -->
+                <div style="background: rgba(15, 23, 42, 0.6); border-radius: 16px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--dark-border);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                        <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">⚙️</div>
+                        <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Account Information</h3>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                            <label style="display: block; color: var(--text-light); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Role</label>
+                            <p id="account-role" style="font-weight: 700; color: white; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;"></p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                            <label style="display: block; color: var(--text-light); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Member Since</label>
+                            <p id="member-since" style="font-weight: 700; color: white; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;"></p>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                            <label style="display: block; color: var(--text-light); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Email Verified</label>
+                            <p id="email-verified" style="font-weight: 700; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--dark-border);">
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 16px; font-size: 16px; font-weight: 600;" id="submitBtn">💾 Save Changes</button>
+                    <a href="#" id="cancelBtn" class="btn" style="background: rgba(255,255,255,0.05); color: var(--text-white); border: 1px solid var(--dark-border); flex: 1; text-align: center; text-decoration: none; padding: 16px; font-size: 16px; font-weight: 600;">← Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth-utils.js"></script>
+    <script src="../../js/layout-utils.js"></script>
+    <script>
+        let currentUser = null;
+        let profileData = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            currentUser = await requireAuth();
+            if (!currentUser) return;
+
+            // Load navbar
+            const navbarContainer = document.getElementById('navbar-container');
+            navbarContainer.innerHTML = generateNavbar(currentUser);
+
+            // Load profile data
+            await loadProfile();
+
+            // Setup cancel button
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (currentUser.role === 'staff') {
+                cancelBtn.href = '../staff/dashboard.html';
+            } else if (currentUser.role === 'therapist' || currentUser.role === 'cleaner') {
+                cancelBtn.href = '../therapist/dashboard.html';
+            } else {
+                cancelBtn.href = '../customer/dashboard.html';
+            }
+
+            // Setup form submission
+            document.getElementById('profileUpdateForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Saving...';
+
+                try {
+                    const fileInput = document.getElementById('profile_image');
+                    const hasNewImage = fileInput.files && fileInput.files.length > 0;
+
+                    if (hasNewImage) {
+                        // Update with image
+                        const formData = new FormData();
+                        formData.append('name', document.getElementById('name').value);
+                        formData.append('email', document.getElementById('email').value);
+                        formData.append('phone', document.getElementById('phone').value);
+                        formData.append('address', document.getElementById('address').value);
+                        formData.append('bio', document.getElementById('bio').value);
+                        formData.append('profile_image', fileInput.files[0]);
+
+                        await profileAPI.updateWithImage(formData);
+                    } else {
+                        // Update without image
+                        const formData = {
+                            name: document.getElementById('name').value,
+                            email: document.getElementById('email').value,
+                            phone: document.getElementById('phone').value,
+                            address: document.getElementById('address').value,
+                            bio: document.getElementById('bio').value
+                        };
+
+                        await profileAPI.update(formData);
+                    }
+                    
+                    showMessage('✅ Profile updated successfully!', 'success');
+                    await loadProfile(); // Reload to get updated data
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    showMessage(error.message || 'Failed to update profile. Please try again.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
+        });
+
+        async function loadProfile() {
+            try {
+                const response = await profileAPI.get();
+                profileData = response.profile || response.user || response;
+
+                // Populate form fields
+                document.getElementById('name').value = profileData.name || '';
+                document.getElementById('email').value = profileData.email || '';
+                document.getElementById('phone').value = profileData.phone || '';
+                document.getElementById('address').value = profileData.address || '';
+                document.getElementById('bio').value = profileData.bio || '';
+
+                // Update profile header
+                document.getElementById('profile-name').textContent = profileData.name || '';
+                document.getElementById('profile-role').textContent = getRoleDisplayName(profileData.role);
+                
+                // Update profile image
+                const profileImageUrl = getProfileImageUrl(profileData);
+                document.getElementById('profile-image-preview').src = profileImageUrl;
+                
+                // Show/hide delete image button
+                if (profileData.profile_image) {
+                    document.getElementById('deleteImageBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('deleteImageBtn').style.display = 'none';
+                }
+
+                // Update account information
+                document.getElementById('account-role').textContent = getRoleDisplayName(profileData.role);
+                const createdDate = new Date(profileData.created_at);
+                document.getElementById('member-since').textContent = createdDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                document.getElementById('email-verified').textContent = profileData.email_verified_at ? '✓ Verified' : '✗ Not Verified';
+                document.getElementById('email-verified').style.color = profileData.email_verified_at ? '#34d399' : '#f87171';
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showMessage('Failed to load profile data. Please refresh the page.', 'error');
+            }
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                
+                if (file.size > maxSize) {
+                    alert('Image size must be less than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                    input.value = '';
+                    return;
+                }
+                
+                const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Invalid file type. Please upload a JPEG, PNG, or GIF image.');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-image-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function deleteProfileImage() {
+            if (!confirm('Are you sure you want to delete your profile image?')) return;
+            
+            try {
+                // Assuming there's a delete image endpoint
+                await apiClient.delete('/profile/image');
+                showMessage('✅ Profile image deleted successfully!', 'success');
+                await loadProfile();
+            } catch (error) {
+                console.error('Error deleting profile image:', error);
+                showMessage('Failed to delete profile image. Please try again.', 'error');
+            }
+        }
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Make function available globally
+        window.deleteProfileImage = deleteProfileImage;
+    </script>
+</body>
+</html>

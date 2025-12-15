@@ -3,8 +3,8 @@
  * Handles token storage in localStorage and API requests
  */
 
-// Get API base URL from config or use default
-const API_BASE_URL = (window.CONFIG && window.CONFIG.API_BASE_URL) || window.location.origin + '/api';
+// Use production backend URL for GitHub Pages deployment
+const API_BASE_URL = 'https://laravel-massagebooking.bytevortexz.com/api';
 
 // Token management
 const TokenManager = {
@@ -68,8 +68,8 @@ const apiClient = {
             if (response.status === 401) {
                 TokenManager.removeToken();
                 // Redirect to login if not already there
-                if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('login.html')) {
-                    window.location.href = './login.html';
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
                 }
                 throw new Error('Session expired. Please login again.');
             }
@@ -142,8 +142,8 @@ const apiClient = {
 
         if (response.status === 401) {
             TokenManager.removeToken();
-            if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('login.html')) {
-                window.location.href = './login.html';
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login';
             }
             throw new Error('Session expired. Please login again.');
         }
@@ -181,6 +181,20 @@ const authAPI = {
     },
 
     /**
+     * Verify OTP
+     */
+    async verifyOTP(email, otp) {
+        return await apiClient.post('/verify-otp', { email, otp });
+    },
+
+    /**
+     * Resend OTP
+     */
+    async resendOTP(email) {
+        return await apiClient.post('/resend-otp', { email });
+    },
+
+    /**
      * Logout user
      */
     async logout() {
@@ -198,6 +212,16 @@ const authAPI = {
      */
     async me() {
         return await apiClient.get('/me');
+    },
+};
+
+// Customer API
+const customerAPI = {
+    /**
+     * Get available therapists
+     */
+    async getAvailableTherapists() {
+        return await apiClient.get('/customer/available-therapists');
     },
 };
 
@@ -319,6 +343,27 @@ const staffAPI = {
     },
 
     /**
+     * Get single therapist
+     */
+    async getTherapist(id) {
+        return await apiClient.get(`/staff/therapists/${id}`);
+    },
+
+    /**
+     * Create therapist
+     */
+    async createTherapist(therapistData) {
+        return await apiClient.post('/staff/therapists', therapistData);
+    },
+
+    /**
+     * Update therapist
+     */
+    async updateTherapist(id, therapistData) {
+        return await apiClient.put(`/staff/therapists/${id}`, therapistData);
+    },
+
+    /**
      * Get all bookings
      */
     async getBookings(status = null) {
@@ -380,3 +425,4 @@ window.bookingAPI = bookingAPI;
 window.therapistAPI = therapistAPI;
 window.staffAPI = staffAPI;
 window.profileAPI = profileAPI;
+

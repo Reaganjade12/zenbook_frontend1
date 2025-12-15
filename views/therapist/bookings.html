@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manage Bookings - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common-layout.css">
+    <style>
+        .btn-info {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        }
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div id="main-content" style="margin-left: 260px; padding: 30px; min-height: 100vh;">
+        <div class="container">
+            <div class="page-header" style="margin-bottom: 30px;">
+                <h1>Manage Bookings</h1>
+                <p>View and manage all your booking requests</p>
+            </div>
+
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: var(--text-white); display: flex; align-items: center; gap: 12px;">
+                            <span style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white;">📅</span>
+                            All Bookings
+                        </h2>
+                        <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Accept, decline, or update booking status</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="toggleAvailabilityBtn" onclick="toggleAvailability()" class="btn" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                            <span id="availabilityIcon">✓</span> <span id="availabilityText">Available</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="unavailableWarning" style="display: none; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 12px; margin-bottom: 25px; align-items: center; gap: 12px;">
+                    <div style="font-size: 24px;">⚠️</div>
+                    <div>
+                        <strong style="color: #92400e;">You are currently unavailable</strong>
+                        <p style="color: #78350f; margin: 4px 0 0 0; font-size: 13px;">Customers cannot select you for new bookings. Toggle above to make yourself available.</p>
+                    </div>
+                </div>
+
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-status="">📊 All</button>
+                    <button class="filter-btn" data-status="pending">⏳ Pending</button>
+                    <button class="filter-btn" data-status="approved">✅ Approved</button>
+                    <button class="filter-btn" data-status="in_progress">🔄 In Progress</button>
+                    <button class="filter-btn" data-status="completed">🎉 Completed</button>
+                </div>
+
+                <div id="bookings-container">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                        <p style="color: var(--text-light);">Loading bookings...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth-utils.js"></script>
+    <script src="../../js/layout-utils.js"></script>
+    <script>
+        let currentUser = null;
+        let bookings = [];
+        let isAvailable = false;
+        let currentStatus = '';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            currentUser = await requireAuth('therapist');
+            if (!currentUser) return;
+
+            // Get status from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            currentStatus = urlParams.get('status') || '';
+
+            // Update active filter button
+            updateFilterButtons();
+
+            // Load bookings
+            await loadBookings();
+
+            // Setup filter button handlers
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentStatus = this.dataset.status || '';
+                    updateFilterButtons();
+                    loadBookings();
+                    // Update URL without reload
+                    const url = new URL(window.location);
+                    if (currentStatus) {
+                        url.searchParams.set('status', currentStatus);
+                    } else {
+                        url.searchParams.delete('status');
+                    }
+                    window.history.pushState({}, '', url);
+                });
+            });
+        });
+
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.status === currentStatus) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadBookings() {
+            const container = document.getElementById('bookings-container');
+            
+            // Show loading
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading bookings...</p>
+                </div>
+            `;
+
+            try {
+                const response = await therapistAPI.getBookings(currentStatus || null);
+                bookings = response.bookings || [];
+                isAvailable = response.is_available || false;
+
+                // Update availability button
+                updateAvailabilityButton();
+
+                // Render bookings
+                renderBookings();
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                        <h3 style="color: var(--text-white); margin-bottom: 10px;">Error Loading Bookings</h3>
+                        <p style="color: var(--text-light);">${escapeHtml(error.message || 'Failed to load bookings. Please try again.')}</p>
+                        <button onclick="loadBookings()" class="btn btn-primary" style="margin-top: 20px;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateAvailabilityButton() {
+            const btn = document.getElementById('toggleAvailabilityBtn');
+            const icon = document.getElementById('availabilityIcon');
+            const text = document.getElementById('availabilityText');
+            const warning = document.getElementById('unavailableWarning');
+
+            if (isAvailable) {
+                btn.style.background = '#10b981';
+                icon.textContent = '✓';
+                text.textContent = 'Available';
+                warning.style.display = 'none';
+            } else {
+                btn.style.background = '#ef4444';
+                icon.textContent = '✗';
+                text.textContent = 'Unavailable';
+                warning.style.display = 'flex';
+            }
+        }
+
+        async function toggleAvailability() {
+            try {
+                await therapistAPI.toggleAvailability();
+                isAvailable = !isAvailable;
+                updateAvailabilityButton();
+            } catch (error) {
+                console.error('Error toggling availability:', error);
+                alert('Failed to toggle availability. Please try again.');
+            }
+        }
+
+        function renderBookings() {
+            const container = document.getElementById('bookings-container');
+
+            if (bookings.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🧘</div>
+                        <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No booking requests</h3>
+                        <p style="color: var(--text-light);">New booking requests will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <div style="overflow-x: auto; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Customer</th>
+                                <th>Massage Type</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            bookings.forEach(booking => {
+                const bookingDate = new Date(booking.booking_date);
+                const formattedDate = bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                const formattedTime = formatTime(booking.booking_time);
+                const customerInitial = booking.customer ? booking.customer.name.charAt(0).toUpperCase() : '?';
+                const customerName = booking.customer ? escapeHtml(booking.customer.name) : 'Unknown';
+                const address = booking.address || '';
+                const shortAddress = address.length > 30 ? address.substring(0, 30) + '...' : address;
+                const statusClass = getStatusBadgeClass(booking.status);
+                const statusText = formatStatus(booking.status);
+
+                let actionsHTML = '';
+                if (booking.status === 'pending' && booking.therapist_id === currentUser.id) {
+                    actionsHTML = `
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="acceptBooking(${booking.id})" class="btn btn-success" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                ✓ Accept
+                            </button>
+                            <button onclick="declineBooking(${booking.id})" class="btn btn-danger" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                ✗ Decline
+                            </button>
+                        </div>
+                    `;
+                } else if (booking.status === 'approved' && booking.therapist_id === currentUser.id) {
+                    actionsHTML = `
+                        <button onclick="updateBookingStatus(${booking.id}, 'in_progress')" class="btn btn-info" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                            ▶ Start Session
+                        </button>
+                    `;
+                } else if (booking.status === 'in_progress' && booking.therapist_id === currentUser.id) {
+                    actionsHTML = `
+                        <button onclick="updateBookingStatus(${booking.id}, 'completed')" class="btn btn-success" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                            ✓ Complete
+                        </button>
+                    `;
+                } else if (booking.status === 'completed') {
+                    actionsHTML = `<span style="color: #10b981; font-weight: 600;">✓ Completed</span>`;
+                } else if (booking.status === 'declined') {
+                    actionsHTML = `<span style="color: #ef4444;">Declined</span>`;
+                }
+
+                tableHTML += `
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-white);">${escapeHtml(formattedDate)}</td>
+                        <td style="color: var(--text-white);">${escapeHtml(formattedTime)}</td>
+                        <td style="font-weight: 600; color: var(--text-white);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;">${customerInitial}</span>
+                                ${customerName}
+                            </div>
+                        </td>
+                        <td style="color: var(--text-white);">
+                            <span style="padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; font-weight: 500;">${escapeHtml(booking.service_type)}</span>
+                        </td>
+                        <td style="color: var(--text-light);">${escapeHtml(shortAddress)}</td>
+                        <td>
+                            <span class="badge ${statusClass}">
+                                ${escapeHtml(statusText)}
+                            </span>
+                        </td>
+                        <td>${actionsHTML}</td>
+                    </tr>
+                `;
+
+                // Add notes row if present
+                if (booking.notes) {
+                    tableHTML += `
+                        <tr>
+                            <td colspan="7" style="background: rgba(255,255,255,0.02); padding: 16px 20px; border-radius: 8px;">
+                                <strong style="color: var(--text-white);">📝 Notes:</strong> 
+                                <span style="color: var(--text-light);">${escapeHtml(booking.notes)}</span>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        async function acceptBooking(id) {
+            try {
+                await therapistAPI.acceptBooking(id);
+                await loadBookings();
+            } catch (error) {
+                console.error('Error accepting booking:', error);
+                alert('Failed to accept booking. Please try again.');
+            }
+        }
+
+        async function declineBooking(id) {
+            if (!confirm('Are you sure you want to decline this booking?')) return;
+            try {
+                await therapistAPI.declineBooking(id);
+                await loadBookings();
+            } catch (error) {
+                console.error('Error declining booking:', error);
+                alert('Failed to decline booking. Please try again.');
+            }
+        }
+
+        async function updateBookingStatus(id, status) {
+            try {
+                await therapistAPI.updateStatus(id, status);
+                await loadBookings();
+            } catch (error) {
+                console.error('Error updating booking status:', error);
+                alert('Failed to update booking status. Please try again.');
+            }
+        }
+
+        // Make functions available globally
+        window.acceptBooking = acceptBooking;
+        window.declineBooking = declineBooking;
+        window.updateBookingStatus = updateBookingStatus;
+        window.toggleAvailability = toggleAvailability;
+    </script>
+</body>
+</html>
