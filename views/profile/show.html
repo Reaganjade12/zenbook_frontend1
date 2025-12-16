@@ -333,9 +333,10 @@
                                 if (response.status === 404) {
                                     console.error('[loadProfile] ⚠️ 404 ERROR: Image file not found on server!');
                                     console.error('[loadProfile] This usually means:');
-                                    console.error('[loadProfile] 1. The storage symlink is missing (run: php artisan storage:link)');
-                                    console.error('[loadProfile] 2. The file was not saved correctly');
-                                    console.error('[loadProfile] 3. The web server cannot access the storage directory');
+                                    console.error('[loadProfile] 1. The file was not saved correctly');
+                                    console.error('[loadProfile] 2. The file path is incorrect');
+                                    console.error('[loadProfile] 3. The Laravel storage route is not working');
+                                    console.error('[loadProfile] Note: Symlink is NOT required - files are served via Laravel route');
                                     
                                     // Check storage configuration
                                     try {
@@ -343,9 +344,13 @@
                                         console.log('[loadProfile] Storage check result:', storageCheck);
                                         if (storageCheck && storageCheck.checks) {
                                             console.log('[loadProfile] Storage diagnostics:', storageCheck.checks);
-                                            if (!storageCheck.checks.public_storage_link_exists) {
-                                                console.error('[loadProfile] ❌ CRITICAL: Storage symlink does not exist!');
-                                                console.error('[loadProfile] Server admin must run: php artisan storage:link');
+                                            if (!storageCheck.checks.user_image_file_exists) {
+                                                console.error('[loadProfile] ❌ CRITICAL: Image file does not exist on server!');
+                                                console.error('[loadProfile] File path:', storageCheck.checks.user_image_path);
+                                                console.error('[loadProfile] Storage directory exists:', storageCheck.checks.storage_path_exists);
+                                                console.error('[loadProfile] Profiles directory exists:', storageCheck.checks.profiles_dir_exists);
+                                            } else {
+                                                console.log('[loadProfile] ✅ File exists on server, route may not be working');
                                             }
                                         }
                                     } catch (checkError) {
@@ -484,4 +489,3 @@ function previewImage(input) {
 </script>
 </body>
 </html>
-
