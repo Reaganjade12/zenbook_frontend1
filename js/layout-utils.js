@@ -314,4 +314,3 @@ window.formatTime = formatTime;
 window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
-
