@@ -3,7 +3,7 @@
  * Helper functions for generating common layout elements
  */
 
-const BACKEND_URL = 'https://laravel-massagebooking.bytevortexz.com';
+const BACKEND_URL = 'https://apilaravel.bytevortexz.com';
 
 // Generate navbar HTML
 function generateNavbar(user) {
