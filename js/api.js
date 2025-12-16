@@ -4,7 +4,12 @@
  */
 
 // Use production backend URL for GitHub Pages deployment
-const API_BASE_URL = 'https://apilaravel.bytevortexz.com/api';
+const API_BASE_URLS = [
+    'https://apilaravel.bytevortexz.com/api',
+    'https://laravel-massagebooking.bytevortexz.com/api',
+];
+window.API_BASE_URLS = API_BASE_URLS;
+window.API_BASE_URL = API_BASE_URLS[0];
 
 // Token management
 const TokenManager = {
@@ -37,6 +42,24 @@ const TokenManager = {
     }
 };
 
+const redirectToLogin = () => {
+    const path = window.location.pathname;
+    if (path.includes('/views/auth/login')) {
+        return;
+    }
+
+    const parts = path.split('/');
+    const viewsIndex = parts.indexOf('views');
+    let basePath = '';
+
+    if (viewsIndex > 1) {
+        basePath = parts.slice(0, viewsIndex).join('/');
+    }
+
+    const loginPath = `${basePath}/views/auth/login.html`;
+    window.location.href = loginPath;
+};
+
 // API Client
 const apiClient = {
     /**
@@ -62,22 +85,45 @@ const apiClient = {
         };
 
         try {
-            const response = await fetch(`${API_BASE_URL}${url}`, config);
+            let response;
+            let lastNetworkError;
+
+            for (const baseUrl of API_BASE_URLS) {
+                try {
+                    response = await fetch(`${baseUrl}${url}`, config);
+                    window.API_BASE_URL = baseUrl;
+                    break;
+                } catch (error) {
+                    lastNetworkError = error;
+                    if (error instanceof TypeError) {
+                        continue;
+                    }
+                    throw error;
+                }
+            }
+
+            if (!response) {
+                throw lastNetworkError || new Error('Failed to fetch');
+            }
             
             // Handle 401 Unauthorized - token expired or invalid
             if (response.status === 401) {
                 TokenManager.removeToken();
-                // Redirect to login if not already there
-                if (!window.location.pathname.includes('/login')) {
-                    window.location.href = '/login';
-                }
+                redirectToLogin();
                 throw new Error('Session expired. Please login again.');
             }
 
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json')
+                ? await response.json()
+                : await response.text();
             
             if (!response.ok) {
-                throw new Error(data.message || 'An error occurred');
+                if (typeof data === 'string') {
+                    throw new Error(data || 'An error occurred');
+                }
+                const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
+                throw new Error(firstError || data.message || 'An error occurred');
             }
 
             return data;
@@ -128,30 +174,56 @@ const apiClient = {
      */
     async postFormData(url, formData) {
         const token = TokenManager.getToken();
-        const headers = {};
+        const headers = {
+            'Accept': 'application/json',
+        };
         
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        const response = await fetch(`${API_BASE_URL}${url}`, {
-            method: 'POST',
-            headers,
-            body: formData,
-        });
+        let response;
+        let lastNetworkError;
+
+        for (const baseUrl of API_BASE_URLS) {
+            try {
+                response = await fetch(`${baseUrl}${url}`, {
+                    method: 'POST',
+                    headers,
+                    body: formData,
+                });
+                window.API_BASE_URL = baseUrl;
+                break;
+            } catch (error) {
+                lastNetworkError = error;
+                if (error instanceof TypeError) {
+                    continue;
+                }
+                throw error;
+            }
+        }
+
+        if (!response) {
+            throw lastNetworkError || new Error('Failed to fetch');
+        }
 
         if (response.status === 401) {
             TokenManager.removeToken();
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
-            }
+            redirectToLogin();
             throw new Error('Session expired. Please login again.');
         }
 
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+            ? await response.json()
+            : await response.text();
         
         if (!response.ok) {
-            throw new Error(data.message || 'An error occurred');
+            if (typeof data === 'string') {
+                throw new Error(data || 'An error occurred');
+            }
+            const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
+            throw new Error(firstError || data.message || 'An error occurred');
         }
 
         return data;
