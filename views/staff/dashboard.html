@@ -51,26 +51,26 @@
     <div id="sidebar-container"></div>
     <div id="main-content" style="margin-left: 260px; padding: 30px; min-height: 100vh;">
         <div class="container">
-            <!-- Statistics Cards -->
+<!-- Statistics Cards -->
             <div id="stats-container" class="stats-grid">
                 <div style="text-align: center; padding: 40px 20px; grid-column: 1 / -1;">
                     <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
                     <p style="color: var(--text-light);">Loading statistics...</p>
-                </div>
-            </div>
+    </div>
+</div>
 
-            <!-- Bookings Section -->
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-                    <div>
-                        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white;">
-                            All Bookings
-                        </h2>
+<!-- Bookings Section -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white;">
+                All Bookings
+            </h2>
                         <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Manage and monitor all booking requests</p>
-                    </div>
-                </div>
-                
-                <div class="filter-buttons">
+        </div>
+    </div>
+    
+    <div class="filter-buttons">
                     <button class="filter-btn active" data-status="">All</button>
                     <button class="filter-btn" data-status="pending">Pending</button>
                     <button class="filter-btn" data-status="approved">Approved</button>
@@ -117,9 +117,9 @@
                     </div>
                     <a href="therapists/index.html" class="btn btn-primary" style="text-decoration: none;">
                         Manage Therapists
-                    </a>
-                </div>
-                
+        </a>
+    </div>
+
                 <div id="therapists-container">
                     <div style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
@@ -142,6 +142,8 @@
             // Check authentication
             currentUser = await requireAuth('admin');
             if (!currentUser) return;
+
+            injectAdminLayout({ user: currentUser, title: 'Admin Dashboard - ZenBook', active: 'dashboard' });
 
             // Get status from URL params
             const urlParams = new URLSearchParams(window.location.search);
@@ -243,21 +245,21 @@
                 }
 
                 let tableHTML = `
-                    <div style="overflow-x: auto; border-radius: 12px;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Customer</th>
-                                    <th>Therapist</th>
-                                    <th>Massage Type</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Therapist</th>
+                        <th>Massage Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                 `;
 
                 bookings.forEach(booking => {
@@ -272,45 +274,45 @@
                     const statusText = formatStatus(booking.status);
 
                     tableHTML += `
-                        <tr>
+                    <tr>
                             <td data-label="ID" style="color: var(--text-light); font-weight: 600;">#${booking.id}</td>
                             <td data-label="Date" style="font-weight: 600; color: var(--text-white);">${escapeHtml(formattedDate)}</td>
                             <td data-label="Time" style="color: var(--text-white);">${escapeHtml(formattedTime)}</td>
                             <td data-label="Customer" style="font-weight: 600; color: var(--text-white);">
-                                <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;">${customerInitial}</span>
                                     ${customerName}
-                                </div>
-                            </td>
-                            <td data-label="Therapist">
+                            </div>
+                        </td>
+                        <td data-label="Therapist">
                                 ${therapistName ? `
-                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
                                         <span style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;">${therapistInitial}</span>
                                         ${therapistName}
-                                    </div>
+                                </div>
                                 ` : '<span style="color: var(--text-light); font-style: italic;">Not assigned</span>'}
-                            </td>
+                        </td>
                             <td data-label="Massage Type" style="color: var(--text-white);">
                                 <span style="padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; font-weight: 500;">${escapeHtml(booking.service_type)}</span>
-                            </td>
-                            <td data-label="Status">
+                        </td>
+                        <td data-label="Status">
                                 <span class="badge ${statusClass}">
                                     ${escapeHtml(statusText)}
-                                </span>
-                            </td>
-                            <td data-label="Actions">
+                            </span>
+                        </td>
+                        <td data-label="Actions">
                                 <button onclick="deleteBooking(${booking.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
                                     Delete
                                 </button>
-                            </td>
-                        </tr>
+                        </td>
+                    </tr>
                     `;
                 });
 
                 tableHTML += `
-                            </tbody>
-                        </table>
-                    </div>
+                </tbody>
+            </table>
+        </div>
                 `;
 
                 container.innerHTML = tableHTML;
@@ -320,7 +322,7 @@
                     <div style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
                         <p style="color: var(--text-light);">Failed to load bookings</p>
-                    </div>
+        </div>
                 `;
             }
         }
@@ -338,24 +340,24 @@
                             <div style="font-size: 64px; margin-bottom: 20px; color: var(--text-light);">○</div>
                             <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No customers found</h3>
                             <p style="color: var(--text-light);">No customers have registered yet.</p>
-                        </div>
+        </div>
                     `;
                     return;
                 }
-
+    
                 let tableHTML = `
-                    <div style="overflow-x: auto; border-radius: 12px;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Registered</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                 `;
 
                 users.forEach(user => {
@@ -366,29 +368,29 @@
                     const formattedDate = registeredDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
                     tableHTML += `
-                        <tr>
+                    <tr>
                             <td style="color: var(--text-light); font-weight: 600;">#${user.id}</td>
                             <td style="font-weight: 600; color: var(--text-white);">
-                                <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
                                     <span style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600;">${userInitial}</span>
                                     ${userName}
-                                </div>
-                            </td>
+                            </div>
+                        </td>
                             <td style="color: var(--text-white);">${userEmail}</td>
                             <td style="color: var(--text-light); font-size: 13px;">${escapeHtml(formattedDate)}</td>
-                            <td>
+                        <td>
                                 <button onclick="deleteUser(${user.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
                                     Delete
                                 </button>
-                            </td>
-                        </tr>
+                        </td>
+                    </tr>
                     `;
                 });
 
                 tableHTML += `
-                            </tbody>
-                        </table>
-                    </div>
+                </tbody>
+            </table>
+        </div>
                 `;
 
                 container.innerHTML = tableHTML;
@@ -398,7 +400,7 @@
                     <div style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
                         <p style="color: var(--text-light);">Failed to load customers</p>
-                    </div>
+        </div>
                 `;
             }
         }
@@ -418,25 +420,25 @@
                             <p style="color: var(--text-light); margin-bottom: 25px;">Get started by adding your first therapist</p>
                             <a href="therapists/create.html" class="btn btn-primary" style="text-decoration: none;">
                                 + Add New Therapist
-                            </a>
-                        </div>
+        </a>
+    </div>
                     `;
                     return;
                 }
-
+    
                 let tableHTML = `
-                    <div style="overflow-x: auto; border-radius: 12px;">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Registered</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                 `;
 
                 therapists.forEach(therapist => {
@@ -447,34 +449,34 @@
                     const formattedDate = registeredDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
                     tableHTML += `
-                        <tr>
+                    <tr>
                             <td style="color: var(--text-light); font-weight: 600;">#${therapist.id}</td>
                             <td style="font-weight: 600; color: var(--text-white);">
-                                <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
                                     <span style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600;">${therapistInitial}</span>
                                     ${therapistName}
-                                </div>
-                            </td>
+                            </div>
+                        </td>
                             <td style="color: var(--text-white);">${therapistEmail}</td>
                             <td style="color: var(--text-light); font-size: 13px;">${escapeHtml(formattedDate)}</td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
+                        <td>
+                            <div style="display: flex; gap: 8px;">
                                     <a href="therapists/edit.html?id=${therapist.id}" class="btn btn-warning" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
-                                        Edit
-                                    </a>
+                                    Edit
+                                </a>
                                     <button onclick="deleteTherapist(${therapist.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
                                         Delete
                                     </button>
-                                </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </td>
+                    </tr>
                     `;
                 });
 
                 tableHTML += `
-                            </tbody>
-                        </table>
-                    </div>
+                </tbody>
+            </table>
+        </div>
                 `;
 
                 container.innerHTML = tableHTML;
@@ -484,7 +486,7 @@
                     <div style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
                         <p style="color: var(--text-light);">Failed to load therapists</p>
-                    </div>
+        </div>
                 `;
             }
         }
@@ -530,3 +532,4 @@
     </script>
 </body>
 </html>
+
