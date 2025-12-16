@@ -51,6 +51,9 @@
             currentUser = await requireAuth('therapist');
             if (!currentUser) return;
 
+            // Inject therapist layout (sidebar and header)
+            injectTherapistLayout({ user: currentUser, title: 'My Customers - ZenBook', active: 'customers' });
+
             // Load customers
             await loadCustomers();
         });
@@ -149,3 +152,4 @@
     </script>
 </body>
 </html>
+
