@@ -67,8 +67,12 @@ function getProfileImageUrl(user) {
     if (user.profile_image_url) {
         const urlValue = String(user.profile_image_url);
         if (urlValue.startsWith('http://') || urlValue.startsWith('https://')) {
-            // It's already a full URL, use it directly
-            return urlValue + (urlValue.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            // Convert HTTP to HTTPS to avoid mixed content issues
+            let secureUrl = urlValue;
+            if (urlValue.startsWith('http://')) {
+                secureUrl = urlValue.replace('http://', 'https://');
+            }
+            return secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
         }
         candidate = urlValue;
     }
@@ -81,12 +85,17 @@ function getProfileImageUrl(user) {
         return 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2740%27 height=%2740%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2716%27%3E👤%3C/text%3E%3C/svg%3E';
     }
     
+    // Always use HTTPS for backend URL to avoid mixed content issues
     const backendUrl = 'https://apilaravel.bytevortexz.com';
     const imageValue = String(candidate);
     
-    // If it's already a full URL, return it
+    // If it's already a full URL, convert HTTP to HTTPS
     if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
-        return imageValue + (imageValue.includes('?') ? '&' : '?') + 'v=' + Date.now();
+        let secureUrl = imageValue;
+        if (imageValue.startsWith('http://')) {
+            secureUrl = imageValue.replace('http://', 'https://');
+        }
+        return secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
     }
     
     // Handle different path formats
@@ -126,4 +135,5 @@ window.loadUserProfile = loadUserProfile;
 window.getProfileImageUrl = getProfileImageUrl;
 window.getRoleDisplayName = getRoleDisplayName;
 window.handleLogout = handleLogout;
+
 
