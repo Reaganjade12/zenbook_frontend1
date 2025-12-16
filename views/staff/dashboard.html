@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <script src="../../js/api.js"></script>
+    <script src="../../js/api.js?v=2"></script>
     <script src="../../js/auth-utils.js?v=2"></script>
     <script src="../../js/layout-utils.js?v=2"></script>
     <script>
@@ -229,6 +229,14 @@
         async function loadBookings() {
             const container = document.getElementById('bookings-container');
             
+            // Show loading state
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading bookings...</p>
+                </div>
+            `;
+            
             try {
                 const response = await staffAPI.getBookings(currentStatus || null);
                 const bookings = response.bookings || [];
@@ -318,11 +326,23 @@
                 container.innerHTML = tableHTML;
             } catch (error) {
                 console.error('Error loading bookings:', error);
+                const errorMessage = error.message || 'Failed to load bookings. Please try again.';
+                const isServerError = errorMessage.includes('500') || errorMessage.includes('Internal Server Error');
+                
                 container.innerHTML = `
                     <div style="text-align: center; padding: 40px 20px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
-                        <p style="color: var(--text-light);">Failed to load bookings</p>
-        </div>
+                        <div style="font-size: 48px; margin-bottom: 15px;">${isServerError ? '⚠️' : '❌'}</div>
+                        <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;">Error Loading Bookings</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                            ${escapeHtml(errorMessage)}
+                        </p>
+                        ${isServerError ? `
+                            <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
+                                This appears to be a server-side error. Please contact support if the issue persists.
+                            </p>
+                        ` : ''}
+                        <button onclick="loadBookings()" class="btn btn-primary" style="margin-top: 10px;">Retry</button>
+                    </div>
                 `;
             }
         }
@@ -532,4 +552,3 @@
     </script>
 </body>
 </html>
-
