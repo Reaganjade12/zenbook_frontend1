@@ -116,20 +116,12 @@
             currentUser = await requireAuth('therapist');
             if (!currentUser) return;
 
-            // Load sidebar (we'll need to create a sidebar utility or load it here)
-            await loadSidebar();
+            // Inject therapist layout (sidebar and header)
+            injectTherapistLayout({ user: currentUser, title: 'Therapist Dashboard - ZenBook', active: 'dashboard' });
 
             // Load dashboard data
             await loadDashboard();
         });
-
-        async function loadSidebar() {
-            // For now, we'll create a simple sidebar structure
-            // In a full implementation, you'd load this from a layout utility
-            const sidebarContainer = document.getElementById('sidebar-container');
-            // Sidebar will be loaded via a utility function or inline here
-            // For now, we'll keep the main content structure
-        }
 
         async function loadDashboard() {
             try {
@@ -369,3 +361,4 @@
     </script>
 </body>
 </html>
+
