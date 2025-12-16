@@ -86,6 +86,9 @@
             currentUser = await requireAuth('therapist');
             if (!currentUser) return;
 
+            // Inject therapist layout (sidebar and header)
+            injectTherapistLayout({ user: currentUser, title: 'Manage Bookings - ZenBook', active: 'bookings' });
+
             // Get status from URL params
             const urlParams = new URLSearchParams(window.location.search);
             currentStatus = urlParams.get('status') || '';
