@@ -149,9 +149,13 @@
                 mainContent.style.marginLeft = '260px';
                 injectAdminLayout({ user: currentUser, title: 'My Profile - ZenBook', active: 'profile' });
                 navbarContainer.innerHTML = '';
+            } else if (currentUser.role === 'therapist' || currentUser.role === 'cleaner') {
+                mainContent.style.marginLeft = '260px';
+                injectTherapistLayout({ user: currentUser, title: 'My Profile - ZenBook', active: 'profile' });
+                navbarContainer.innerHTML = '';
             } else {
                 mainContent.style.marginLeft = '0';
-                // Load navbar
+                // Load navbar for customers
                 navbarContainer.innerHTML = generateNavbar(currentUser);
             }
 
@@ -314,3 +318,4 @@ function previewImage(input) {
 </script>
 </body>
 </html>
+
