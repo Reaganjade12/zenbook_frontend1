@@ -279,6 +279,18 @@ function ensureAdminLayoutStyles() {
     document.head.appendChild(style);
 }
 
+async function refreshLayoutUserData() {
+    try {
+        const response = await authAPI.me();
+        if (response && response.user) {
+            return response.user;
+        }
+    } catch (error) {
+        console.error('Error refreshing user data:', error);
+    }
+    return null;
+}
+
 function injectAdminLayout(options) {
     const user = options?.user;
     const pageTitle = options?.title || 'Admin Dashboard - ZenBook';
@@ -320,6 +332,17 @@ function injectAdminLayout(options) {
             </aside>
         `;
         sidebarContainer.dataset.rendered = 'true';
+        
+        // Refresh user data and update images after a short delay to ensure layout is rendered
+        setTimeout(async () => {
+            const freshUser = await refreshLayoutUserData();
+            if (freshUser) {
+                const avatars = sidebarContainer.querySelectorAll('.admin-user-avatar');
+                avatars.forEach(img => {
+                    img.src = getProfileImageUrl(freshUser);
+                });
+            }
+        }, 100);
     }
 
     const mainContent = document.getElementById('main-content');
@@ -337,6 +360,17 @@ function injectAdminLayout(options) {
             </div>
         `;
         mainContent.insertAdjacentHTML('afterbegin', headerHtml);
+        
+        // Refresh user data and update header images after a short delay
+        setTimeout(async () => {
+            const freshUser = await refreshLayoutUserData();
+            if (freshUser) {
+                const headerAvatars = document.querySelectorAll('#admin-top-nav .admin-top-nav-user img');
+                headerAvatars.forEach(img => {
+                    img.src = getProfileImageUrl(freshUser);
+                });
+            }
+        }, 100);
     }
 }
 
@@ -554,6 +588,17 @@ function injectTherapistLayout(options) {
             </aside>
         `;
         sidebarContainer.dataset.rendered = 'true';
+        
+        // Refresh user data and update images after a short delay to ensure layout is rendered
+        setTimeout(async () => {
+            const freshUser = await refreshLayoutUserData();
+            if (freshUser) {
+                const avatars = sidebarContainer.querySelectorAll('.therapist-user-avatar');
+                avatars.forEach(img => {
+                    img.src = getProfileImageUrl(freshUser);
+                });
+            }
+        }, 100);
     }
 
     const mainContent = document.getElementById('main-content');
@@ -571,6 +616,17 @@ function injectTherapistLayout(options) {
             </div>
         `;
         mainContent.insertAdjacentHTML('afterbegin', headerHtml);
+        
+        // Refresh user data and update header images after a short delay
+        setTimeout(async () => {
+            const freshUser = await refreshLayoutUserData();
+            if (freshUser) {
+                const headerAvatars = document.querySelectorAll('#therapist-top-nav .therapist-top-nav-user img');
+                headerAvatars.forEach(img => {
+                    img.src = getProfileImageUrl(freshUser);
+                });
+            }
+        }, 100);
     }
 }
 
@@ -583,3 +639,4 @@ window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
 window.injectTherapistLayout = injectTherapistLayout;
+
