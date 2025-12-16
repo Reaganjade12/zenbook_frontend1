@@ -205,6 +205,22 @@
                         console.log('[Profile Update] Sending FormData to API...');
                         const updateResponse = await profileAPI.updateWithImage(formData);
                         console.log('[Profile Update] ✅ API response received:', updateResponse);
+                        
+                        if (updateResponse && updateResponse.debug) {
+                            console.log('[Profile Update] Debug info:', updateResponse.debug);
+                            if (!updateResponse.debug.file_exists) {
+                                console.error('[Profile Update] ⚠️ WARNING: File does not exist on server!');
+                                console.error('[Profile Update] Storage path:', updateResponse.debug.storage_path);
+                                console.error('[Profile Update] Public URL:', updateResponse.debug.public_url);
+                            }
+                        }
+                        
+                        if (updateResponse && updateResponse.user) {
+                            console.log('[Profile Update] Updated user data:', {
+                                profile_image: updateResponse.user.profile_image,
+                                profile_image_url: updateResponse.user.profile_image_url
+                            });
+                        }
                     } else {
                         console.log('[Profile Update] Updating profile without image...');
                         // Update without image
@@ -292,7 +308,7 @@
                     };
                     
                     // Add error handler to log if image fails to load
-                    imagePreview.onerror = function(event) {
+                    imagePreview.onerror = async function(event) {
                         console.error('[loadProfile] ❌ Failed to load profile image');
                         console.error('[loadProfile] Image URL that failed:', profileImageUrl);
                         console.error('[loadProfile] Error event:', event);
@@ -307,6 +323,39 @@
                             naturalWidth: imagePreview.naturalWidth,
                             naturalHeight: imagePreview.naturalHeight
                         });
+                        
+                        // Check if it's a 404 error (file not found)
+                        if (profileImageUrl) {
+                            try {
+                                const response = await fetch(profileImageUrl, { method: 'HEAD' });
+                                console.error('[loadProfile] HTTP Status:', response.status, response.statusText);
+                                
+                                if (response.status === 404) {
+                                    console.error('[loadProfile] ⚠️ 404 ERROR: Image file not found on server!');
+                                    console.error('[loadProfile] This usually means:');
+                                    console.error('[loadProfile] 1. The storage symlink is missing (run: php artisan storage:link)');
+                                    console.error('[loadProfile] 2. The file was not saved correctly');
+                                    console.error('[loadProfile] 3. The web server cannot access the storage directory');
+                                    
+                                    // Check storage configuration
+                                    try {
+                                        const storageCheck = await apiClient.get('/profile/storage-check');
+                                        console.log('[loadProfile] Storage check result:', storageCheck);
+                                        if (storageCheck && storageCheck.checks) {
+                                            console.log('[loadProfile] Storage diagnostics:', storageCheck.checks);
+                                            if (!storageCheck.checks.public_storage_link_exists) {
+                                                console.error('[loadProfile] ❌ CRITICAL: Storage symlink does not exist!');
+                                                console.error('[loadProfile] Server admin must run: php artisan storage:link');
+                                            }
+                                        }
+                                    } catch (checkError) {
+                                        console.error('[loadProfile] Could not check storage:', checkError);
+                                    }
+                                }
+                            } catch (fetchError) {
+                                console.error('[loadProfile] Could not check image URL:', fetchError);
+                            }
+                        }
                         
                         // Try to fix HTTP URLs
                         if (profileImageUrl && profileImageUrl.startsWith('http://')) {
@@ -435,3 +484,4 @@ function previewImage(input) {
 </script>
 </body>
 </html>
+
