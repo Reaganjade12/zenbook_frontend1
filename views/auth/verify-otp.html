@@ -147,28 +147,28 @@
         </form>
 
         <button type="button" class="btn" style="background: white; color: var(--text-dark); border: 2px solid var(--border);" id="resendBtn">
-            Resend OTP
-        </button>
+                Resend OTP
+            </button>
 
         <div style="text-align: center; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border);">
             <a href="login.html" style="color: var(--primary-dark); font-weight: 500; text-decoration: none; font-size: 14px;">← Back to Login</a>
-        </div>
     </div>
+</div>
 
-    <script src="../js/api.js"></script>
-    <script>
+    <script src="../../js/api.js"></script>
+<script>
         // Get email from URL params or localStorage
-        document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const emailFromUrl = urlParams.get('email');
             const emailFromStorage = localStorage.getItem('pending_verification_email');
             const email = emailFromUrl || emailFromStorage || '';
             
-            const emailInput = document.getElementById('email');
+        const emailInput = document.getElementById('email');
             emailInput.value = email;
-            
+        
             if (email && !emailFromStorage) {
-                localStorage.setItem('pending_verification_email', email);
+            localStorage.setItem('pending_verification_email', email);
             }
         });
 
@@ -180,14 +180,14 @@
         function clearMessage() {
             document.getElementById('messageContainer').innerHTML = '';
         }
-
+    
         // Auto-format OTP input
-        document.getElementById('otp').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-            if (this.value.length === 6) {
+    document.getElementById('otp').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value.length === 6) {
                 document.getElementById('verifyForm').dispatchEvent(new Event('submit'));
-            }
-        });
+        }
+    });
 
         // Verify OTP
         document.getElementById('verifyForm').addEventListener('submit', async function(e) {
@@ -220,9 +220,9 @@
                 showMessage(error.message || 'Invalid or expired OTP. Please try again.', 'error');
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify OTP';
-            }
-        });
-
+        }
+    });
+    
         // Resend OTP
         document.getElementById('resendBtn').addEventListener('click', async function() {
             clearMessage();
