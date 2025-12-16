@@ -4,7 +4,7 @@
  */
 
 // Use production backend URL for GitHub Pages deployment
-const API_BASE_URL = 'https://https://apilaravel.bytevortexz.com/api';
+const API_BASE_URL = 'https://apilaravel.bytevortexz.com/api';
 
 // Token management
 const TokenManager = {
