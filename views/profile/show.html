@@ -195,7 +195,7 @@
                         formData.append('bio', document.getElementById('bio').value);
                         formData.append('profile_image', fileInput.files[0]);
 
-                        await profileAPI.updateWithImage(formData);
+                        const updateResponse = await profileAPI.updateWithImage(formData);
                     } else {
                         // Update without image
                         const formData = {
@@ -210,7 +210,22 @@
                     }
                     
                     showMessage('✅ Profile updated successfully!', 'success');
-                    await loadProfile(); // Reload to get updated data
+                    
+                    // Reload profile data
+                    await loadProfile();
+                    
+                    // Reload user data to update layouts
+                    try {
+                        const userResponse = await authAPI.me();
+                        if (userResponse && userResponse.user) {
+                            currentUser = userResponse.user;
+                            // Refresh layout images if layout is injected
+                            refreshLayoutImages(currentUser);
+                        }
+                    } catch (error) {
+                        console.error('Error reloading user data:', error);
+                    }
+                    
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 } catch (error) {
@@ -227,6 +242,10 @@
                 const response = await profileAPI.get();
                 profileData = response.profile || response.user || response;
 
+                if (!profileData) {
+                    throw new Error('No profile data received');
+                }
+
                 // Populate form fields
                 document.getElementById('name').value = profileData.name || '';
                 document.getElementById('email').value = profileData.email || '';
@@ -240,7 +259,18 @@
                 
                 // Update profile image
                 const profileImageUrl = getProfileImageUrl(profileData);
-                document.getElementById('profile-image-preview').src = profileImageUrl;
+                const imagePreview = document.getElementById('profile-image-preview');
+                if (imagePreview) {
+                    imagePreview.src = profileImageUrl;
+                    // Add error handler to log if image fails to load
+                    imagePreview.onerror = function() {
+                        console.error('Failed to load profile image:', profileImageUrl);
+                        console.log('Profile data:', {
+                            profile_image: profileData.profile_image,
+                            profile_image_url: profileData.profile_image_url
+                        });
+                    };
+                }
                 
                 // Show/hide delete image button
                 if (profileData.profile_image) {
@@ -291,10 +321,23 @@ function previewImage(input) {
             if (!confirm('Are you sure you want to delete your profile image?')) return;
             
             try {
-                // Assuming there's a delete image endpoint
-                await apiClient.delete('/profile/image');
+                await profileAPI.deleteImage();
                 showMessage('✅ Profile image deleted successfully!', 'success');
+                
+                // Reload profile data
                 await loadProfile();
+                
+                // Reload user data to update layouts
+                try {
+                    const userResponse = await authAPI.me();
+                    if (userResponse && userResponse.user) {
+                        currentUser = userResponse.user;
+                        // Refresh layout images
+                        refreshLayoutImages(currentUser);
+                    }
+                } catch (error) {
+                    console.error('Error reloading user data:', error);
+                }
             } catch (error) {
                 console.error('Error deleting profile image:', error);
                 showMessage('Failed to delete profile image. Please try again.', 'error');
@@ -313,9 +356,35 @@ function previewImage(input) {
             }
         }
 
+        // Refresh layout images after profile update
+        function refreshLayoutImages(user) {
+            // Update sidebar avatar if exists
+            const sidebarAvatars = document.querySelectorAll('.admin-user-avatar, .therapist-user-avatar');
+            sidebarAvatars.forEach(img => {
+                if (img && user) {
+                    img.src = getProfileImageUrl(user) + '&refresh=' + Date.now();
+                }
+            });
+            
+            // Update top nav avatar if exists
+            const topNavAvatars = document.querySelectorAll('.admin-top-nav-user img, .therapist-top-nav-user img');
+            topNavAvatars.forEach(img => {
+                if (img && user) {
+                    img.src = getProfileImageUrl(user) + '&refresh=' + Date.now();
+                }
+            });
+            
+            // Update navbar avatar if exists
+            const navbarAvatars = document.querySelectorAll('.navbar-user img');
+            navbarAvatars.forEach(img => {
+                if (img && user) {
+                    img.src = getProfileImageUrl(user) + '&refresh=' + Date.now();
+                }
+            });
+        }
+
         // Make function available globally
         window.deleteProfileImage = deleteProfileImage;
 </script>
 </body>
 </html>
-
