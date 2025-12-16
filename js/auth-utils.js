@@ -63,7 +63,17 @@ function getProfileImageUrl(user) {
     }
     
     const backendUrl = 'https://apilaravel.bytevortexz.com';
-    return `${backendUrl}/storage/${user.profile_image}`;
+    const imageValue = String(user.profile_image);
+    if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
+        return imageValue;
+    }
+    if (imageValue.startsWith('/storage/')) {
+        return `${backendUrl}${imageValue}`;
+    }
+    if (imageValue.startsWith('storage/')) {
+        return `${backendUrl}/${imageValue}`;
+    }
+    return `${backendUrl}/storage/${imageValue}`;
 }
 
 // Get role display name
@@ -92,4 +102,3 @@ window.loadUserProfile = loadUserProfile;
 window.getProfileImageUrl = getProfileImageUrl;
 window.getRoleDisplayName = getRoleDisplayName;
 window.handleLogout = handleLogout;
-
