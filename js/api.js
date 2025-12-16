@@ -80,18 +80,27 @@ const apiClient = {
         }
 
         const config = {
+            method: options.method || 'GET',
             ...options,
             headers,
         };
 
         try {
             let response;
+            let baseUrlUsed;
             let lastNetworkError;
+            const retryableStatuses = new Set([404, 405, 500, 502, 503, 504]);
 
             for (const baseUrl of API_BASE_URLS) {
                 try {
-                    response = await fetch(`${baseUrl}${url}`, config);
-                    window.API_BASE_URL = baseUrl;
+                    const candidateResponse = await fetch(`${baseUrl}${url}`, config);
+                    response = candidateResponse;
+                    baseUrlUsed = baseUrl;
+
+                    if (API_BASE_URLS.length > 1 && retryableStatuses.has(candidateResponse.status)) {
+                        continue;
+                    }
+
                     break;
                 } catch (error) {
                     lastNetworkError = error;
@@ -105,6 +114,10 @@ const apiClient = {
             if (!response) {
                 throw lastNetworkError || new Error('Failed to fetch');
             }
+
+            if (baseUrlUsed) {
+                window.API_BASE_URL = baseUrlUsed;
+            }
             
             // Handle 401 Unauthorized - token expired or invalid
             if (response.status === 401) {
@@ -113,22 +126,54 @@ const apiClient = {
                 throw new Error('Session expired. Please login again.');
             }
 
+            // Parse response based on content type
+            // Note: response body can only be read once, so we read as text first
+            let data;
             const contentType = response.headers.get('content-type') || '';
-            const data = contentType.includes('application/json')
-                ? await response.json()
-                : await response.text();
+            let responseText = '';
+            
+            try {
+                responseText = await response.text();
+                
+                if (contentType.includes('application/json') && responseText) {
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('Error parsing JSON response:', parseError);
+                        data = responseText; // Fallback to text
+                    }
+                } else {
+                    data = responseText || null;
+                }
+            } catch (readError) {
+                console.error('Error reading response:', readError);
+                data = `HTTP ${response.status}: ${response.statusText}`;
+            }
             
             if (!response.ok) {
+                // Handle error response
                 if (typeof data === 'string') {
-                    throw new Error(data || 'An error occurred');
+                    throw new Error(data || `HTTP ${response.status}: ${response.statusText}`);
                 }
-                const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
-                throw new Error(firstError || data.message || 'An error occurred');
+                if (data && typeof data === 'object') {
+                    const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
+                    throw new Error(firstError || data.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             return data;
         } catch (error) {
-            console.error('API Error:', error);
+            console.error('API Error:', {
+                message: error.message,
+                url: url,
+                baseUrl: window.API_BASE_URL || API_BASE_URLS[0],
+                error: error
+            });
+            // Re-throw with more context if it's a network error
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                throw new Error(`Network error: Unable to connect to the API. Please check your internet connection and try again.`);
+            }
             throw error;
         }
     },
@@ -183,16 +228,24 @@ const apiClient = {
         }
 
         let response;
+        let baseUrlUsed;
         let lastNetworkError;
+        const retryableStatuses = new Set([404, 405, 500, 502, 503, 504]);
 
         for (const baseUrl of API_BASE_URLS) {
             try {
-                response = await fetch(`${baseUrl}${url}`, {
+                const candidateResponse = await fetch(`${baseUrl}${url}`, {
                     method: 'POST',
                     headers,
                     body: formData,
                 });
-                window.API_BASE_URL = baseUrl;
+                response = candidateResponse;
+                baseUrlUsed = baseUrl;
+
+                if (API_BASE_URLS.length > 1 && retryableStatuses.has(candidateResponse.status)) {
+                    continue;
+                }
+
                 break;
             } catch (error) {
                 lastNetworkError = error;
@@ -207,23 +260,50 @@ const apiClient = {
             throw lastNetworkError || new Error('Failed to fetch');
         }
 
+        if (baseUrlUsed) {
+            window.API_BASE_URL = baseUrlUsed;
+        }
+
         if (response.status === 401) {
             TokenManager.removeToken();
             redirectToLogin();
             throw new Error('Session expired. Please login again.');
         }
 
+        // Parse response based on content type
+        // Note: response body can only be read once, so we read as text first
+        let data;
         const contentType = response.headers.get('content-type') || '';
-        const data = contentType.includes('application/json')
-            ? await response.json()
-            : await response.text();
+        let responseText = '';
+        
+        try {
+            responseText = await response.text();
+            
+            if (contentType.includes('application/json') && responseText) {
+                try {
+                    data = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('Error parsing JSON response:', parseError);
+                    data = responseText; // Fallback to text
+                }
+            } else {
+                data = responseText || null;
+            }
+        } catch (readError) {
+            console.error('Error reading response:', readError);
+            data = `HTTP ${response.status}: ${response.statusText}`;
+        }
         
         if (!response.ok) {
+            // Handle error response
             if (typeof data === 'string') {
-                throw new Error(data || 'An error occurred');
+                throw new Error(data || `HTTP ${response.status}: ${response.statusText}`);
             }
-            const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
-            throw new Error(firstError || data.message || 'An error occurred');
+            if (data && typeof data === 'object') {
+                const firstError = data?.errors ? Object.values(data.errors)?.flat?.()?.[0] : null;
+                throw new Error(firstError || data.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         return data;
@@ -308,6 +388,13 @@ const bookingAPI = {
     },
 
     /**
+     * Get available therapists
+     */
+    async getAvailableTherapists() {
+        return await apiClient.get('/customer/available-therapists');
+    },
+
+    /**
      * Get all bookings
      */
     async getAll(status = null) {
@@ -388,6 +475,13 @@ const therapistAPI = {
      */
     async toggleAvailability() {
         return await apiClient.post('/therapist/toggle-availability');
+    },
+
+    /**
+     * Get customers
+     */
+    async getCustomers() {
+        return await apiClient.get('/therapist/customers');
     },
 };
 
@@ -487,12 +581,20 @@ const profileAPI = {
     async updateWithImage(formData) {
         return await apiClient.postFormData('/profile', formData);
     },
+
+    /**
+     * Delete profile image
+     */
+    async deleteImage() {
+        return await apiClient.delete('/profile/image');
+    },
 };
 
 // Export for use in other scripts
 window.TokenManager = TokenManager;
 window.apiClient = apiClient;
 window.authAPI = authAPI;
+window.customerAPI = customerAPI;
 window.bookingAPI = bookingAPI;
 window.therapistAPI = therapistAPI;
 window.staffAPI = staffAPI;
