@@ -55,11 +55,45 @@ function formatDate(dateString) {
 // Format time
 function formatTime(timeString) {
     if (!timeString) return '';
-    const [hours, minutes] = timeString.split(':');
+    let value = String(timeString);
+    if (value.includes('T')) {
+        value = value.split('T')[1];
+    }
+    if (value.includes(' ')) {
+        const parts = value.split(' ');
+        value = parts[parts.length - 1];
+    }
+    value = value.replace('Z', '');
+
+    const [hours, minutes] = value.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function getViewsBasePath() {
+    const path = window.location.pathname;
+    const parts = path.split('/');
+    const viewsIndex = parts.indexOf('views');
+
+    if (viewsIndex === -1) {
+        return '/views';
+    }
+
+    const baseParts = parts.slice(0, viewsIndex + 1);
+    return baseParts.join('/');
+}
+
+function buildViewsHref(relativePath) {
+    const base = getViewsBasePath().replace(/\/+$/, '');
+    const rel = String(relativePath || '').replace(/^\/+/, '');
+
+    if (window.location.origin && window.location.origin !== 'null') {
+        return `${window.location.origin}${base}/${rel}`;
+    }
+
+    return `${base}/${rel}`;
 }
 
 // Get status badge class
@@ -256,9 +290,9 @@ function injectAdminLayout(options) {
 
     const sidebarContainer = document.getElementById('sidebar-container');
     if (sidebarContainer && !sidebarContainer.dataset.rendered) {
-        const dashboardHref = new URL('dashboard.html', window.location.href).href;
-        const therapistsHref = new URL('therapists/index.html', window.location.href).href;
-        const profileHref = new URL('../profile/show.html', window.location.href).href;
+        const dashboardHref = buildViewsHref('staff/dashboard.html');
+        const therapistsHref = buildViewsHref('staff/therapists/index.html');
+        const profileHref = buildViewsHref('profile/show.html');
 
         sidebarContainer.innerHTML = `
             <aside class="admin-sidebar">
