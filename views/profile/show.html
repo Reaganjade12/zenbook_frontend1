@@ -186,6 +186,13 @@
                     const hasNewImage = fileInput.files && fileInput.files.length > 0;
 
                     if (hasNewImage) {
+                        console.log('[Profile Update] Starting image upload...');
+                        console.log('[Profile Update] File details:', {
+                            name: fileInput.files[0].name,
+                            size: fileInput.files[0].size,
+                            type: fileInput.files[0].type
+                        });
+                        
                         // Update with image
                         const formData = new FormData();
                         formData.append('name', document.getElementById('name').value);
@@ -195,8 +202,11 @@
                         formData.append('bio', document.getElementById('bio').value);
                         formData.append('profile_image', fileInput.files[0]);
 
+                        console.log('[Profile Update] Sending FormData to API...');
                         const updateResponse = await profileAPI.updateWithImage(formData);
+                        console.log('[Profile Update] ✅ API response received:', updateResponse);
                     } else {
+                        console.log('[Profile Update] Updating profile without image...');
                         // Update without image
                         const formData = {
                             name: document.getElementById('name').value,
@@ -206,7 +216,9 @@
                             bio: document.getElementById('bio').value
                         };
 
-                        await profileAPI.update(formData);
+                        console.log('[Profile Update] Sending update data:', formData);
+                        const updateResponse = await profileAPI.update(formData);
+                        console.log('[Profile Update] ✅ API response received:', updateResponse);
                     }
                     
                     showMessage('✅ Profile updated successfully!', 'success');
@@ -258,18 +270,53 @@
                 document.getElementById('profile-role').textContent = getRoleDisplayName(profileData.role);
                 
                 // Update profile image
+                console.log('[loadProfile] Loading profile image for user:', profileData.id);
+                console.log('[loadProfile] Profile data received:', {
+                    profile_image: profileData.profile_image,
+                    profile_image_url: profileData.profile_image_url,
+                    has_profile_image: !!profileData.profile_image,
+                    has_profile_image_url: !!profileData.profile_image_url
+                });
+                
                 const profileImageUrl = getProfileImageUrl(profileData);
+                console.log('[loadProfile] Generated image URL:', profileImageUrl);
+                
                 const imagePreview = document.getElementById('profile-image-preview');
                 if (imagePreview) {
+                    console.log('[loadProfile] Setting image src to:', profileImageUrl);
                     imagePreview.src = profileImageUrl;
-                    // Add error handler to log if image fails to load
-                    imagePreview.onerror = function() {
-                        console.error('Failed to load profile image:', profileImageUrl);
-                        console.log('Profile data:', {
-                            profile_image: profileData.profile_image,
-                            profile_image_url: profileData.profile_image_url
-                        });
+                    
+                    // Add success handler
+                    imagePreview.onload = function() {
+                        console.log('[loadProfile] ✅ Profile image loaded successfully:', profileImageUrl);
                     };
+                    
+                    // Add error handler to log if image fails to load
+                    imagePreview.onerror = function(event) {
+                        console.error('[loadProfile] ❌ Failed to load profile image');
+                        console.error('[loadProfile] Image URL that failed:', profileImageUrl);
+                        console.error('[loadProfile] Error event:', event);
+                        console.error('[loadProfile] Profile data:', {
+                            profile_image: profileData.profile_image,
+                            profile_image_url: profileData.profile_image_url,
+                            full_profile_data: profileData
+                        });
+                        console.error('[loadProfile] Image element:', {
+                            src: imagePreview.src,
+                            currentSrc: imagePreview.currentSrc,
+                            naturalWidth: imagePreview.naturalWidth,
+                            naturalHeight: imagePreview.naturalHeight
+                        });
+                        
+                        // Try to fix HTTP URLs
+                        if (profileImageUrl && profileImageUrl.startsWith('http://')) {
+                            const httpsUrl = profileImageUrl.replace('http://', 'https://');
+                            console.log('[loadProfile] Attempting to retry with HTTPS URL:', httpsUrl);
+                            imagePreview.src = httpsUrl;
+                        }
+                    };
+                } else {
+                    console.error('[loadProfile] ❌ Image preview element not found!');
                 }
                 
                 // Show/hide delete image button
@@ -388,3 +435,4 @@ function previewImage(input) {
 </script>
 </body>
 </html>
+
