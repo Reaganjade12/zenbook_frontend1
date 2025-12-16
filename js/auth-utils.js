@@ -58,55 +58,79 @@ async function loadUserProfile() {
 
 // Get profile image URL
 function getProfileImageUrl(user) {
+    console.log('[getProfileImageUrl] Called with user:', user ? { id: user.id, name: user.name, role: user.role } : 'null');
+    
     if (!user) {
+        console.log('[getProfileImageUrl] No user provided, returning default avatar');
         return 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2740%27 height=%2740%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2716%27%3E👤%3C/text%3E%3C/svg%3E';
     }
 
     // Prefer profile_image_url if it's a full URL, otherwise use profile_image
     let candidate = null;
+    let source = 'none';
+    
     if (user.profile_image_url) {
         const urlValue = String(user.profile_image_url);
+        console.log('[getProfileImageUrl] Found profile_image_url:', urlValue);
+        source = 'profile_image_url';
+        
         if (urlValue.startsWith('http://') || urlValue.startsWith('https://')) {
             // Convert HTTP to HTTPS to avoid mixed content issues
             let secureUrl = urlValue;
             if (urlValue.startsWith('http://')) {
+                console.log('[getProfileImageUrl] Converting HTTP to HTTPS:', urlValue);
                 secureUrl = urlValue.replace('http://', 'https://');
+                console.log('[getProfileImageUrl] Converted URL:', secureUrl);
             }
-            return secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            const finalUrl = secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
+            console.log('[getProfileImageUrl] Returning URL from profile_image_url:', finalUrl);
+            return finalUrl;
         }
         candidate = urlValue;
     }
     
     if (!candidate && user.profile_image) {
+        console.log('[getProfileImageUrl] Using profile_image path:', user.profile_image);
         candidate = user.profile_image;
+        source = 'profile_image';
     }
     
     if (!candidate) {
+        console.log('[getProfileImageUrl] No image data found, returning default avatar');
         return 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2740%27 height=%2740%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2716%27%3E👤%3C/text%3E%3C/svg%3E';
     }
     
     // Always use HTTPS for backend URL to avoid mixed content issues
     const backendUrl = 'https://apilaravel.bytevortexz.com';
     const imageValue = String(candidate);
+    console.log('[getProfileImageUrl] Building URL from', source, ':', imageValue);
     
     // If it's already a full URL, convert HTTP to HTTPS
     if (imageValue.startsWith('http://') || imageValue.startsWith('https://')) {
         let secureUrl = imageValue;
         if (imageValue.startsWith('http://')) {
+            console.log('[getProfileImageUrl] Converting HTTP to HTTPS:', imageValue);
             secureUrl = imageValue.replace('http://', 'https://');
+            console.log('[getProfileImageUrl] Converted URL:', secureUrl);
         }
-        return secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
+        const finalUrl = secureUrl + (secureUrl.includes('?') ? '&' : '?') + 'v=' + Date.now();
+        console.log('[getProfileImageUrl] Returning full URL:', finalUrl);
+        return finalUrl;
     }
     
     // Handle different path formats
+    let finalUrl;
     if (imageValue.startsWith('/storage/')) {
-        return `${backendUrl}${imageValue}?v=${Date.now()}`;
+        finalUrl = `${backendUrl}${imageValue}?v=${Date.now()}`;
+    } else if (imageValue.startsWith('storage/')) {
+        finalUrl = `${backendUrl}/${imageValue}?v=${Date.now()}`;
+    } else {
+        // Default: assume it's a relative path from storage root
+        finalUrl = `${backendUrl}/storage/${imageValue}?v=${Date.now()}`;
     }
-    if (imageValue.startsWith('storage/')) {
-        return `${backendUrl}/${imageValue}?v=${Date.now()}`;
-    }
-    // Default: assume it's a relative path from storage root
-    return `${backendUrl}/storage/${imageValue}?v=${Date.now()}`;
+    
+    console.log('[getProfileImageUrl] Built final URL from path:', finalUrl);
+    return finalUrl;
 }
 
 // Get role display name
@@ -135,5 +159,6 @@ window.loadUserProfile = loadUserProfile;
 window.getProfileImageUrl = getProfileImageUrl;
 window.getRoleDisplayName = getRoleDisplayName;
 window.handleLogout = handleLogout;
+
 
 
