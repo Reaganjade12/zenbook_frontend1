@@ -184,6 +184,9 @@
                 try {
                     const fileInput = document.getElementById('profile_image');
                     const hasNewImage = fileInput.files && fileInput.files.length > 0;
+                    
+                    // Declare updateResponse outside the if/else blocks so it's accessible later
+                    let updateResponse = null;
 
                     if (hasNewImage) {
                         console.log('[Profile Update] Starting image upload...');
@@ -203,7 +206,7 @@
                         formData.append('profile_image', fileInput.files[0]);
 
                         console.log('[Profile Update] Sending FormData to API...');
-                        const updateResponse = await profileAPI.updateWithImage(formData);
+                        updateResponse = await profileAPI.updateWithImage(formData);
                         console.log('[Profile Update] ✅ API response received:', updateResponse);
                         
                         if (updateResponse && updateResponse.debug) {
@@ -233,7 +236,7 @@
                         };
 
                         console.log('[Profile Update] Sending update data:', formData);
-                        const updateResponse = await profileAPI.update(formData);
+                        updateResponse = await profileAPI.update(formData);
                         console.log('[Profile Update] ✅ API response received:', updateResponse);
                     }
                     
