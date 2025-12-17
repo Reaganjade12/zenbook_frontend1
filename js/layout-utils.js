@@ -630,8 +630,71 @@ function injectTherapistLayout(options) {
     }
 }
 
+// Refresh layout images after profile update
+function refreshLayoutImages(user) {
+    if (!user) {
+        console.warn('[refreshLayoutImages] No user provided');
+        return;
+    }
+    
+    console.log('[refreshLayoutImages] Refreshing images for user:', user.id);
+    const newImageUrl = getProfileImageUrl(user);
+    console.log('[refreshLayoutImages] New image URL:', newImageUrl);
+    
+    // Update sidebar avatar if exists (Admin and Therapist)
+    const sidebarAvatars = document.querySelectorAll('.admin-user-avatar, .therapist-user-avatar');
+    console.log('[refreshLayoutImages] Found', sidebarAvatars.length, 'sidebar avatars');
+    sidebarAvatars.forEach((img, index) => {
+        if (img && user) {
+            const oldSrc = img.src;
+            img.src = newImageUrl;
+            console.log(`[refreshLayoutImages] Updated sidebar avatar ${index + 1}:`, oldSrc, '->', img.src);
+            // Force reload by triggering error handler if image fails
+            img.onerror = function() {
+                this.onerror = null;
+                this.src = newImageUrl + (newImageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+            };
+        }
+    });
+    
+    // Update top nav avatar if exists (Admin and Therapist)
+    const topNavAvatars = document.querySelectorAll('.admin-top-nav-user img, .therapist-top-nav-user img');
+    console.log('[refreshLayoutImages] Found', topNavAvatars.length, 'top nav avatars');
+    topNavAvatars.forEach((img, index) => {
+        if (img && user) {
+            const oldSrc = img.src;
+            img.src = newImageUrl;
+            console.log(`[refreshLayoutImages] Updated top nav avatar ${index + 1}:`, oldSrc, '->', img.src);
+            // Force reload by triggering error handler if image fails
+            img.onerror = function() {
+                this.onerror = null;
+                this.src = newImageUrl + (newImageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+            };
+        }
+    });
+    
+    // Update navbar avatar if exists (Customer layout)
+    const navbarAvatars = document.querySelectorAll('.navbar-user img');
+    console.log('[refreshLayoutImages] Found', navbarAvatars.length, 'navbar avatars');
+    navbarAvatars.forEach((img, index) => {
+        if (img && user) {
+            const oldSrc = img.src;
+            img.src = newImageUrl;
+            console.log(`[refreshLayoutImages] Updated navbar avatar ${index + 1}:`, oldSrc, '->', img.src);
+            // Force reload by triggering error handler if image fails
+            img.onerror = function() {
+                this.onerror = null;
+                this.src = newImageUrl + (newImageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+            };
+        }
+    });
+    
+    console.log('[refreshLayoutImages] ✅ Image refresh complete');
+}
+
 // Export
 window.generateNavbar = generateNavbar;
+window.refreshLayoutImages = refreshLayoutImages;
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
 window.formatTime = formatTime;
@@ -639,4 +702,3 @@ window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
 window.injectTherapistLayout = injectTherapistLayout;
-
