@@ -211,12 +211,20 @@
 
         async function toggleAvailability() {
             try {
-                await therapistAPI.toggleAvailability();
-                isAvailable = !isAvailable;
+                const response = await therapistAPI.toggleAvailability();
+                if (response && response.is_available !== undefined) {
+                    isAvailable = response.is_available;
+                } else {
+                    isAvailable = !isAvailable;
+                }
                 renderStatistics();
+                if (response && response.message) {
+                    alert(response.message);
+                }
             } catch (error) {
                 console.error('Error toggling availability:', error);
-                alert('Failed to toggle availability. Please try again.');
+                const errorMessage = error.message || 'Failed to toggle availability. Please try again.';
+                alert(errorMessage);
             }
         }
 
@@ -324,32 +332,44 @@
 
         async function acceptBooking(id) {
             try {
-                await therapistAPI.acceptBooking(id);
+                const response = await therapistAPI.acceptBooking(id);
+                if (response && response.message) {
+                    alert(response.message);
+                }
                 await loadDashboard();
             } catch (error) {
                 console.error('Error accepting booking:', error);
-                alert('Failed to accept booking. Please try again.');
+                const errorMessage = error.message || 'Failed to accept booking. Please try again.';
+                alert(errorMessage);
             }
         }
 
         async function declineBooking(id) {
             if (!confirm('Are you sure you want to decline this booking?')) return;
             try {
-                await therapistAPI.declineBooking(id);
+                const response = await therapistAPI.declineBooking(id);
+                if (response && response.message) {
+                    alert(response.message);
+                }
                 await loadDashboard();
             } catch (error) {
                 console.error('Error declining booking:', error);
-                alert('Failed to decline booking. Please try again.');
+                const errorMessage = error.message || 'Failed to decline booking. Please try again.';
+                alert(errorMessage);
             }
         }
 
         async function updateBookingStatus(id, status) {
             try {
-                await therapistAPI.updateStatus(id, status);
+                const response = await therapistAPI.updateStatus(id, status);
+                if (response && response.message) {
+                    alert(response.message);
+                }
                 await loadDashboard();
             } catch (error) {
                 console.error('Error updating booking status:', error);
-                alert('Failed to update booking status. Please try again.');
+                const errorMessage = error.message || 'Failed to update booking status. Please try again.';
+                alert(errorMessage);
             }
         }
 
@@ -361,4 +381,3 @@
     </script>
 </body>
 </html>
-
