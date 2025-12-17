@@ -638,6 +638,15 @@ function refreshLayoutImages(user) {
     }
     
     console.log('[refreshLayoutImages] Refreshing images for user:', user.id);
+    console.log('[refreshLayoutImages] User object:', {
+        id: user.id,
+        name: user.name,
+        profile_image: user.profile_image,
+        profile_image_url: user.profile_image_url,
+        has_profile_image: !!user.profile_image,
+        has_profile_image_url: !!user.profile_image_url
+    });
+    
     const newImageUrl = getProfileImageUrl(user);
     console.log('[refreshLayoutImages] New image URL:', newImageUrl);
     
