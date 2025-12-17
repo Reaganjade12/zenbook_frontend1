@@ -304,6 +304,12 @@
                         } catch (error) {
                             console.error('Error reloading user data:', error);
                         }
+                        
+                        // Refresh the page after a short delay to show all changes
+                        setTimeout(() => {
+                            console.log('[Profile Update] Refreshing page to show all changes...');
+                            window.location.reload();
+                        }, 1000);
                     }, 500);
                     
                     submitBtn.disabled = false;
