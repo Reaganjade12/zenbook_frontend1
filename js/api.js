@@ -218,6 +218,7 @@ const apiClient = {
      * POST request with FormData (for file uploads)
      */
     async postFormData(url, formData) {
+        console.log('[API] postFormData called for:', url);
         const token = TokenManager.getToken();
         const headers = {
             'Accept': 'application/json',
@@ -225,6 +226,9 @@ const apiClient = {
         
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
+            console.log('[API] Token present, length:', token.length);
+        } else {
+            console.warn('[API] ⚠️ No token found!');
         }
 
         let response;
@@ -234,20 +238,25 @@ const apiClient = {
 
         for (const baseUrl of API_BASE_URLS) {
             try {
-                const candidateResponse = await fetch(`${baseUrl}${url}`, {
+                const fullUrl = `${baseUrl}${url}`;
+                console.log('[API] Attempting request to:', fullUrl);
+                const candidateResponse = await fetch(fullUrl, {
                     method: 'POST',
                     headers,
                     body: formData,
                 });
                 response = candidateResponse;
                 baseUrlUsed = baseUrl;
+                console.log('[API] Response status:', candidateResponse.status, candidateResponse.statusText);
 
                 if (API_BASE_URLS.length > 1 && retryableStatuses.has(candidateResponse.status)) {
+                    console.log('[API] Retryable status, trying next URL...');
                     continue;
                 }
 
                 break;
             } catch (error) {
+                console.error('[API] Request error:', error);
                 lastNetworkError = error;
                 if (error instanceof TypeError) {
                     continue;
@@ -257,14 +266,17 @@ const apiClient = {
         }
 
         if (!response) {
+            console.error('[API] ❌ No response received, last error:', lastNetworkError);
             throw lastNetworkError || new Error('Failed to fetch');
         }
 
         if (baseUrlUsed) {
             window.API_BASE_URL = baseUrlUsed;
+            console.log('[API] Using base URL:', baseUrlUsed);
         }
 
         if (response.status === 401) {
+            console.error('[API] ❌ Unauthorized (401), redirecting to login');
             TokenManager.removeToken();
             redirectToLogin();
             throw new Error('Session expired. Please login again.');
@@ -278,23 +290,30 @@ const apiClient = {
         
         try {
             responseText = await response.text();
+            console.log('[API] Response text length:', responseText.length);
+            console.log('[API] Content-Type:', contentType);
             
             if (contentType.includes('application/json') && responseText) {
                 try {
                     data = JSON.parse(responseText);
+                    console.log('[API] ✅ Parsed JSON response:', data);
                 } catch (parseError) {
-                    console.error('Error parsing JSON response:', parseError);
+                    console.error('[API] ❌ Error parsing JSON response:', parseError);
+                    console.error('[API] Response text:', responseText);
                     data = responseText; // Fallback to text
                 }
             } else {
+                console.log('[API] Non-JSON response, using as text');
                 data = responseText || null;
             }
         } catch (readError) {
-            console.error('Error reading response:', readError);
+            console.error('[API] ❌ Error reading response:', readError);
             data = `HTTP ${response.status}: ${response.statusText}`;
         }
         
         if (!response.ok) {
+            console.error('[API] ❌ Response not OK:', response.status, response.statusText);
+            console.error('[API] Error data:', data);
             // Handle error response
             if (typeof data === 'string') {
                 throw new Error(data || `HTTP ${response.status}: ${response.statusText}`);
@@ -306,6 +325,7 @@ const apiClient = {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
+        console.log('[API] ✅ Request successful, returning data');
         return data;
     },
 };
@@ -364,6 +384,20 @@ const authAPI = {
      */
     async me() {
         return await apiClient.get('/me');
+    },
+
+    /**
+     * Forgot password - send reset link
+     */
+    async forgotPassword(email) {
+        return await apiClient.post('/forgot-password', { email });
+    },
+
+    /**
+     * Reset password with token
+     */
+    async resetPassword(data) {
+        return await apiClient.post('/reset-password', data);
     },
 };
 
@@ -565,28 +599,55 @@ const profileAPI = {
      * Get profile
      */
     async get() {
-        return await apiClient.get('/profile');
+        console.log('[ProfileAPI] Getting profile...');
+        const response = await apiClient.get('/profile');
+        console.log('[ProfileAPI] ✅ Profile data received:', response);
+        if (response && response.user) {
+            console.log('[ProfileAPI] User profile_image:', response.user.profile_image);
+            console.log('[ProfileAPI] User profile_image_url:', response.user.profile_image_url);
+        }
+        return response;
     },
 
     /**
      * Update profile
      */
     async update(profileData) {
-        return await apiClient.put('/profile', profileData);
+        console.log('[ProfileAPI] Updating profile (no image)...');
+        console.log('[ProfileAPI] Update data:', profileData);
+        const response = await apiClient.put('/profile', profileData);
+        console.log('[ProfileAPI] ✅ Profile updated:', response);
+        return response;
     },
 
     /**
      * Update profile with image
      */
     async updateWithImage(formData) {
-        return await apiClient.postFormData('/profile', formData);
+        console.log('[ProfileAPI] Updating profile with image...');
+        console.log('[ProfileAPI] FormData entries:', Array.from(formData.entries()).map(([key, value]) => {
+            if (value instanceof File) {
+                return [key, { name: value.name, size: value.size, type: value.type }];
+            }
+            return [key, value];
+        }));
+        const response = await apiClient.postFormData('/profile', formData);
+        console.log('[ProfileAPI] ✅ Profile updated with image:', response);
+        if (response && response.user) {
+            console.log('[ProfileAPI] Updated user profile_image:', response.user.profile_image);
+            console.log('[ProfileAPI] Updated user profile_image_url:', response.user.profile_image_url);
+        }
+        return response;
     },
 
     /**
      * Delete profile image
      */
     async deleteImage() {
-        return await apiClient.delete('/profile/image');
+        console.log('[ProfileAPI] Deleting profile image...');
+        const response = await apiClient.delete('/profile/image');
+        console.log('[ProfileAPI] ✅ Profile image deleted:', response);
+        return response;
     },
 };
 
@@ -599,4 +660,6 @@ window.bookingAPI = bookingAPI;
 window.therapistAPI = therapistAPI;
 window.staffAPI = staffAPI;
 window.profileAPI = profileAPI;
+
+
 
