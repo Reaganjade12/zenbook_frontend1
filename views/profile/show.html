@@ -279,9 +279,24 @@
                             const userResponse = await authAPI.me();
                             if (userResponse && userResponse.user) {
                                 console.log('[Profile Update] Reloaded user data from API:', userResponse.user);
-                                currentUser = userResponse.user;
+                                console.log('[Profile Update] User has profile_image_url:', !!userResponse.user.profile_image_url);
+                                console.log('[Profile Update] User has profile_image:', !!userResponse.user.profile_image);
+                                
+                                // Merge with existing currentUser to preserve all fields
+                                currentUser = {
+                                    ...currentUser,
+                                    ...userResponse.user,
+                                    profile_image: userResponse.user.profile_image || currentUser?.profile_image,
+                                    profile_image_url: userResponse.user.profile_image_url || currentUser?.profile_image_url
+                                };
+                                
                                 // Refresh layout images again with fresh data
-                                refreshLayoutImages(currentUser);
+                                if (currentUser.profile_image || currentUser.profile_image_url) {
+                                    console.log('[Profile Update] Refreshing layout images with fresh API data...');
+                                    refreshLayoutImages(currentUser);
+                                } else {
+                                    console.warn('[Profile Update] No image data in API response, skipping layout refresh');
+                                }
                             }
                         } catch (error) {
                             console.error('Error reloading user data:', error);
@@ -311,16 +326,31 @@
 
                 // Update currentUser with profile data so layout images can be refreshed
                 if (profileData) {
-                    currentUser = profileData;
+                    // Make sure we have a complete user object with all fields
+                    const updatedUser = {
+                        ...currentUser, // Preserve existing fields
+                        ...profileData, // Override with profile data
+                        profile_image: profileData.profile_image || currentUser?.profile_image,
+                        profile_image_url: profileData.profile_image_url || currentUser?.profile_image_url
+                    };
+                    
+                    currentUser = updatedUser;
                     console.log('[loadProfile] Updated currentUser with profile data:', {
                         id: currentUser.id,
                         name: currentUser.name,
                         profile_image: currentUser.profile_image,
-                        profile_image_url: currentUser.profile_image_url
+                        profile_image_url: currentUser.profile_image_url,
+                        has_profile_image: !!currentUser.profile_image,
+                        has_profile_image_url: !!currentUser.profile_image_url
                     });
                     
-                    // Refresh layout images with updated profile data
-                    refreshLayoutImages(currentUser);
+                    // Only refresh layout images if we have image data
+                    if (currentUser.profile_image || currentUser.profile_image_url) {
+                        console.log('[loadProfile] Refreshing layout images with profile data...');
+                        refreshLayoutImages(currentUser);
+                    } else {
+                        console.warn('[loadProfile] No image data found, skipping layout image refresh');
+                    }
                 }
 
                 // Populate form fields
