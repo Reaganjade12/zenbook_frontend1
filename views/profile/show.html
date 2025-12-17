@@ -239,20 +239,54 @@
                     
                     showMessage('✅ Profile updated successfully!', 'success');
                     
-                    // Reload profile data
-                    await loadProfile();
-                    
-                    // Reload user data to update layouts
-                    try {
-                        const userResponse = await authAPI.me();
-                        if (userResponse && userResponse.user) {
-                            currentUser = userResponse.user;
-                            // Refresh layout images if layout is injected
-                            refreshLayoutImages(currentUser);
+                    // Update currentUser with the response data immediately
+                    if (updateResponse && updateResponse.user) {
+                        console.log('[Profile Update] Updating currentUser with response data:', updateResponse.user);
+                        console.log('[Profile Update] User profile_image_url:', updateResponse.user.profile_image_url);
+                        console.log('[Profile Update] User profile_image:', updateResponse.user.profile_image);
+                        currentUser = updateResponse.user;
+                        
+                        // Update the profile image preview immediately
+                        const imagePreview = document.getElementById('profile-image-preview');
+                        if (imagePreview) {
+                            const newImageUrl = getProfileImageUrl(currentUser);
+                            console.log('[Profile Update] Updating profile image preview to:', newImageUrl);
+                            imagePreview.src = newImageUrl;
+                            imagePreview.onerror = function() {
+                                console.error('[Profile Update] Failed to load updated image:', newImageUrl);
+                                this.onerror = null;
+                                // Try again with fresh cache buster after a short delay
+                                setTimeout(() => {
+                                    this.src = newImageUrl + (newImageUrl.includes('?') ? '&' : '?') + 'retry=' + Date.now();
+                                }, 500);
+                            };
+                            imagePreview.onload = function() {
+                                console.log('[Profile Update] ✅ Profile image preview loaded successfully');
+                            };
                         }
-                    } catch (error) {
-                        console.error('Error reloading user data:', error);
+                        
+                        // Refresh layout images immediately
+                        console.log('[Profile Update] Refreshing layout images...');
+                        refreshLayoutImages(currentUser);
                     }
+                    
+                    // Wait a moment for the file to be fully written, then reload profile data
+                    setTimeout(async () => {
+                        await loadProfile();
+                        
+                        // Also reload user data to update layouts (as fallback)
+                        try {
+                            const userResponse = await authAPI.me();
+                            if (userResponse && userResponse.user) {
+                                console.log('[Profile Update] Reloaded user data from API:', userResponse.user);
+                                currentUser = userResponse.user;
+                                // Refresh layout images again with fresh data
+                                refreshLayoutImages(currentUser);
+                            }
+                        } catch (error) {
+                            console.error('Error reloading user data:', error);
+                        }
+                    }, 500);
                     
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
@@ -267,11 +301,26 @@
 
         async function loadProfile() {
             try {
+                console.log('[loadProfile] Loading profile data...');
                 const response = await profileAPI.get();
                 profileData = response.profile || response.user || response;
 
                 if (!profileData) {
                     throw new Error('No profile data received');
+                }
+
+                // Update currentUser with profile data so layout images can be refreshed
+                if (profileData) {
+                    currentUser = profileData;
+                    console.log('[loadProfile] Updated currentUser with profile data:', {
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        profile_image: currentUser.profile_image,
+                        profile_image_url: currentUser.profile_image_url
+                    });
+                    
+                    // Refresh layout images with updated profile data
+                    refreshLayoutImages(currentUser);
                 }
 
                 // Populate form fields
