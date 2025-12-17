@@ -118,15 +118,23 @@ function getProfileImageUrl(user) {
         return finalUrl;
     }
     
-    // Handle different path formats
+    // Handle different path formats - use API route for better CORS handling
     let finalUrl;
     if (imageValue.startsWith('/storage/')) {
-        finalUrl = `${backendUrl}${imageValue}?v=${Date.now()}`;
+        // Convert /storage/ to /api/storage/
+        finalUrl = `${backendUrl}/api${imageValue}?v=${Date.now()}`;
     } else if (imageValue.startsWith('storage/')) {
+        // Convert storage/ to /api/storage/
+        finalUrl = `${backendUrl}/api/${imageValue}?v=${Date.now()}`;
+    } else if (imageValue.startsWith('/api/storage/')) {
+        // Already using API route
+        finalUrl = `${backendUrl}${imageValue}?v=${Date.now()}`;
+    } else if (imageValue.startsWith('api/storage/')) {
+        // Already using API route (without leading slash)
         finalUrl = `${backendUrl}/${imageValue}?v=${Date.now()}`;
     } else {
-        // Default: assume it's a relative path from storage root
-        finalUrl = `${backendUrl}/storage/${imageValue}?v=${Date.now()}`;
+        // Default: assume it's a relative path from storage root, use API route
+        finalUrl = `${backendUrl}/api/storage/${imageValue}?v=${Date.now()}`;
     }
     
     console.log('[getProfileImageUrl] Built final URL from path:', finalUrl);
@@ -159,6 +167,3 @@ window.loadUserProfile = loadUserProfile;
 window.getProfileImageUrl = getProfileImageUrl;
 window.getRoleDisplayName = getRoleDisplayName;
 window.handleLogout = handleLogout;
-
-
-
