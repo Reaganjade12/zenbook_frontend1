@@ -751,13 +751,14 @@
                 const response = await authAPI.login(email, password);
             
             // Redirect based on user role
-                const role = response.user?.role || 'customer';
+            const role = response.user?.role || 'customer';
+            // We are currently in /views/auth/login.html, so go up one level to reach /views
             if (role === 'staff') {
-                    window.location.href = 'staff/dashboard.html';
+                window.location.href = '../staff/dashboard.html';
             } else if (role === 'cleaner' || role === 'therapist') {
-                    window.location.href = 'therapist/dashboard.html';
+                window.location.href = '../therapist/dashboard.html';
             } else {
-                    window.location.href = 'customer/dashboard.html';
+                window.location.href = '../customer/dashboard.html';
             }
             
         } catch (error) {
@@ -772,5 +773,6 @@
 </script>
 </body>
 </html>
+
 
 
