@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common-layout.css">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-white);
+            margin-bottom: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        }
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div id="main-content" style="margin-left: 260px; padding: 30px; min-height: 100vh;">
+        <div class="container">
+<!-- Statistics Cards -->
+            <div id="stats-container" class="stats-grid">
+                <div style="text-align: center; padding: 40px 20px; grid-column: 1 / -1;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading statistics...</p>
+    </div>
+</div>
+
+<!-- Bookings Section -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white;">
+                All Bookings
+            </h2>
+                        <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Manage and monitor all booking requests</p>
+        </div>
+    </div>
+    
+    <div class="filter-buttons">
+                    <button class="filter-btn active" data-status="">All</button>
+                    <button class="filter-btn" data-status="pending">Pending</button>
+                    <button class="filter-btn" data-status="approved">Approved</button>
+                    <button class="filter-btn" data-status="declined">Declined</button>
+                    <button class="filter-btn" data-status="in_progress">In Progress</button>
+                    <button class="filter-btn" data-status="completed">Completed</button>
+                </div>
+
+                <div id="bookings-container">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                        <p style="color: var(--text-light);">Loading bookings...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white;">
+                            All Customers
+                        </h2>
+                        <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">View and manage all customer accounts</p>
+                    </div>
+                </div>
+                
+                <div id="users-container">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                        <p style="color: var(--text-light);">Loading customers...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Therapists Section -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white;">
+                            All Massage Therapists
+                        </h2>
+                        <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">View and manage all therapist accounts</p>
+                    </div>
+                    <a href="therapists/index.html" class="btn btn-primary" style="text-decoration: none;">
+                        Manage Therapists
+        </a>
+    </div>
+
+                <div id="therapists-container">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                        <p style="color: var(--text-light);">Loading therapists...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/api.js?v=2"></script>
+    <script src="../../js/auth-utils.js?v=2"></script>
+    <script src="../../js/layout-utils.js?v=2"></script>
+    <script>
+        let currentUser = null;
+        let currentStatus = '';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            currentUser = await requireAuth('admin');
+            if (!currentUser) return;
+
+            injectAdminLayout({ user: currentUser, title: 'Admin Dashboard - ZenBook', active: 'dashboard' });
+
+            // Get status from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            currentStatus = urlParams.get('status') || '';
+
+            // Update active filter button
+            updateFilterButtons();
+
+            // Load dashboard data
+            await loadDashboard();
+
+            // Setup filter button handlers
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentStatus = this.dataset.status || '';
+                    updateFilterButtons();
+                    loadBookings();
+                    // Update URL without reload
+                    const url = new URL(window.location);
+                    if (currentStatus) {
+                        url.searchParams.set('status', currentStatus);
+                    } else {
+                        url.searchParams.delete('status');
+                    }
+                    window.history.pushState({}, '', url);
+                });
+            });
+        });
+
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.status === currentStatus) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadDashboard() {
+            try {
+                // Load statistics
+                const statsResponse = await staffAPI.getDashboard();
+                renderStatistics(statsResponse.stats || {});
+
+                // Load bookings, users, and therapists in parallel
+                await Promise.all([
+                    loadBookings(),
+                    loadUsers(),
+                    loadTherapists()
+                ]);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        function renderStatistics(stats) {
+            const statsHTML = `
+                <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none;">
+                    <div class="stat-value" style="color: white;">${stats.total_bookings || 0}</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">New Booking</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+                    <div class="stat-value" style="color: white;">${stats.total_therapists || stats.total_cleaners || 0}</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">Schedule Room</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none;">
+                    <div class="stat-value" style="color: white;">${stats.approved_bookings || 0}</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">Check In</div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: none;">
+                    <div class="stat-value" style="color: white;">${stats.pending_bookings || 0}</div>
+                    <div class="stat-label" style="color: rgba(255,255,255,0.9);">Check Out</div>
+                </div>
+            `;
+
+            document.getElementById('stats-container').innerHTML = statsHTML;
+        }
+
+        async function loadBookings() {
+            const container = document.getElementById('bookings-container');
+            
+            // Show loading state
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading bookings...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await staffAPI.getBookings(currentStatus || null);
+                const bookings = response.bookings || [];
+
+                if (bookings.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+                            <div style="font-size: 64px; margin-bottom: 20px; color: var(--text-light);">□</div>
+                            <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No bookings found</h3>
+                            <p style="color: var(--text-light);">No bookings match your current filter criteria.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let tableHTML = `
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Therapist</th>
+                        <th>Massage Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                `;
+
+                bookings.forEach(booking => {
+                    const bookingDate = new Date(booking.booking_date);
+                    const formattedDate = bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const formattedTime = formatTime(booking.booking_time);
+                    const customerInitial = booking.customer ? booking.customer.name.charAt(0).toUpperCase() : '?';
+                    const customerName = booking.customer ? escapeHtml(booking.customer.name) : 'Unknown';
+                    const therapistInitial = booking.therapist ? booking.therapist.name.charAt(0).toUpperCase() : null;
+                    const therapistName = booking.therapist ? escapeHtml(booking.therapist.name) : null;
+                    const statusClass = getStatusBadgeClass(booking.status);
+                    const statusText = formatStatus(booking.status);
+
+                    tableHTML += `
+                    <tr>
+                            <td data-label="ID" style="color: var(--text-light); font-weight: 600;">#${booking.id}</td>
+                            <td data-label="Date" style="font-weight: 600; color: var(--text-white);">${escapeHtml(formattedDate)}</td>
+                            <td data-label="Time" style="color: var(--text-white);">${escapeHtml(formattedTime)}</td>
+                            <td data-label="Customer" style="font-weight: 600; color: var(--text-white);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;">${customerInitial}</span>
+                                    ${customerName}
+                            </div>
+                        </td>
+                        <td data-label="Therapist">
+                                ${therapistName ? `
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;">${therapistInitial}</span>
+                                        ${therapistName}
+                                </div>
+                                ` : '<span style="color: var(--text-light); font-style: italic;">Not assigned</span>'}
+                        </td>
+                            <td data-label="Massage Type" style="color: var(--text-white);">
+                                <span style="padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; font-weight: 500;">${escapeHtml(booking.service_type)}</span>
+                        </td>
+                        <td data-label="Status">
+                                <span class="badge ${statusClass}">
+                                    ${escapeHtml(statusText)}
+                            </span>
+                        </td>
+                        <td data-label="Actions">
+                                <button onclick="deleteBooking(${booking.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                    Delete
+                                </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+
+                tableHTML += `
+                </tbody>
+            </table>
+        </div>
+                `;
+
+                container.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                const errorMessage = error.message || 'Failed to load bookings. Please try again.';
+                const isServerError = errorMessage.includes('500') || errorMessage.includes('Internal Server Error');
+                
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">${isServerError ? '⚠️' : '❌'}</div>
+                        <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;">Error Loading Bookings</h3>
+                        <p style="color: var(--text-light); margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                            ${escapeHtml(errorMessage)}
+                        </p>
+                        ${isServerError ? `
+                            <p style="color: var(--text-light); font-size: 14px; margin-bottom: 20px;">
+                                This appears to be a server-side error. Please contact support if the issue persists.
+                            </p>
+                        ` : ''}
+                        <button onclick="loadBookings()" class="btn btn-primary" style="margin-top: 10px;">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadUsers() {
+            const container = document.getElementById('users-container');
+            
+            try {
+                const response = await staffAPI.getUsers();
+                const users = response.users || [];
+
+                if (users.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+                            <div style="font-size: 64px; margin-bottom: 20px; color: var(--text-light);">○</div>
+                            <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No customers found</h3>
+                            <p style="color: var(--text-light);">No customers have registered yet.</p>
+        </div>
+                    `;
+                    return;
+                }
+    
+                let tableHTML = `
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                `;
+
+                users.forEach(user => {
+                    const userInitial = user.name ? user.name.charAt(0).toUpperCase() : '?';
+                    const userName = escapeHtml(user.name || 'Unknown');
+                    const userEmail = escapeHtml(user.email || '');
+                    const registeredDate = new Date(user.created_at);
+                    const formattedDate = registeredDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                    tableHTML += `
+                    <tr>
+                            <td style="color: var(--text-light); font-weight: 600;">#${user.id}</td>
+                            <td style="font-weight: 600; color: var(--text-white);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600;">${userInitial}</span>
+                                    ${userName}
+                            </div>
+                        </td>
+                            <td style="color: var(--text-white);">${userEmail}</td>
+                            <td style="color: var(--text-light); font-size: 13px;">${escapeHtml(formattedDate)}</td>
+                        <td>
+                                <button onclick="deleteUser(${user.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                    Delete
+                                </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+
+                tableHTML += `
+                </tbody>
+            </table>
+        </div>
+                `;
+
+                container.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading users:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                        <p style="color: var(--text-light);">Failed to load customers</p>
+        </div>
+                `;
+            }
+        }
+
+        async function loadTherapists() {
+            const container = document.getElementById('therapists-container');
+            
+            try {
+                const response = await staffAPI.getTherapists();
+                const therapists = response.therapists || [];
+
+                if (therapists.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+                            <div style="font-size: 64px; margin-bottom: 20px; color: var(--text-light);">▲</div>
+                            <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No massage therapists found</h3>
+                            <p style="color: var(--text-light); margin-bottom: 25px;">Get started by adding your first therapist</p>
+                            <a href="therapists/create.html" class="btn btn-primary" style="text-decoration: none;">
+                                + Add New Therapist
+        </a>
+    </div>
+                    `;
+                    return;
+                }
+    
+                let tableHTML = `
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                `;
+
+                therapists.forEach(therapist => {
+                    const therapistInitial = therapist.name ? therapist.name.charAt(0).toUpperCase() : '?';
+                    const therapistName = escapeHtml(therapist.name || 'Unknown');
+                    const therapistEmail = escapeHtml(therapist.email || '');
+                    const registeredDate = new Date(therapist.created_at);
+                    const formattedDate = registeredDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+                    tableHTML += `
+                    <tr>
+                            <td style="color: var(--text-light); font-weight: 600;">#${therapist.id}</td>
+                            <td style="font-weight: 600; color: var(--text-white);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600;">${therapistInitial}</span>
+                                    ${therapistName}
+                            </div>
+                        </td>
+                            <td style="color: var(--text-white);">${therapistEmail}</td>
+                            <td style="color: var(--text-light); font-size: 13px;">${escapeHtml(formattedDate)}</td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                    <a href="therapists/edit.html?id=${therapist.id}" class="btn btn-warning" style="padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none;">
+                                    Edit
+                                </a>
+                                    <button onclick="deleteTherapist(${therapist.id})" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                        Delete
+                                    </button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                });
+
+                tableHTML += `
+                </tbody>
+            </table>
+        </div>
+                `;
+
+                container.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading therapists:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                        <p style="color: var(--text-light);">Failed to load therapists</p>
+        </div>
+                `;
+            }
+        }
+
+        async function deleteBooking(id) {
+            if (!confirm('Are you sure you want to delete this booking?')) return;
+            try {
+                await staffAPI.deleteBooking(id);
+                await loadBookings();
+            } catch (error) {
+                console.error('Error deleting booking:', error);
+                alert('Failed to delete booking. Please try again.');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            try {
+                await staffAPI.deleteUser(id);
+                await loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user. Please try again.');
+            }
+        }
+
+        async function deleteTherapist(id) {
+            if (!confirm('Are you sure you want to delete this massage therapist?')) return;
+            try {
+                await staffAPI.deleteTherapist(id);
+                await loadTherapists();
+            } catch (error) {
+                console.error('Error deleting therapist:', error);
+                alert('Failed to delete therapist. Please try again.');
+            }
+        }
+
+        // Make functions available globally
+        window.deleteBooking = deleteBooking;
+        window.deleteUser = deleteUser;
+        window.deleteTherapist = deleteTherapist;
+        window.loadBookings = loadBookings;
+    </script>
+</body>
+</html>
