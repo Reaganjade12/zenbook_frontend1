@@ -466,6 +466,13 @@ const bookingAPI = {
     },
 
     /**
+     * Cancel booking
+     */
+    async cancel(id) {
+        return await apiClient.post(`/customer/bookings/${id}/cancel`);
+    },
+
+    /**
      * Delete booking
      */
     async delete(id) {
@@ -721,6 +728,4 @@ window.therapistAPI = therapistAPI;
 window.staffAPI = staffAPI;
 window.superAdminAPI = superAdminAPI;
 window.profileAPI = profileAPI;
-
-
 
