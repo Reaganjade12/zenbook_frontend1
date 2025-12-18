@@ -245,6 +245,7 @@ function ensureAdminLayoutStyles() {
             align-items: center;
             justify-content: space-between;
             gap: 18px;
+            min-height: 60px;
         }
 
         .admin-top-nav-title {
@@ -254,12 +255,16 @@ function ensureAdminLayoutStyles() {
             color: var(--text-white);
             margin: 0;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            line-height: 1.2;
         }
 
         .admin-top-nav-user {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .admin-top-nav-user img {
@@ -275,27 +280,32 @@ function ensureAdminLayoutStyles() {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            justify-content: center;
             text-align: right;
             min-width: 0;
+            line-height: 1.4;
         }
         
         .admin-top-nav-user > div > div:first-child {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-white);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 150px;
+            line-height: 1.3;
+            margin-bottom: 2px;
         }
         
         .admin-top-nav-user > div > div:last-child {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-light);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 150px;
+            line-height: 1.2;
         }
 
         @media (max-width: 900px) {
@@ -386,9 +396,9 @@ function injectAdminLayout(options) {
                 <h1 class="admin-top-nav-title">${escapeHtml(pageTitle)}</h1>
                 <div class="admin-top-nav-user">
                     <img src="${getProfileImageUrl(user)}" alt="Profile" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2734%27 height=%2734%27%3E%3Crect fill=%27%23334155%27 width=%2734%27 height=%2734%27/%3E%3C/svg%3E';">
-                    <div style="text-align: right;">
-                        <div style="font-weight: 700; font-size: 13px; color: var(--text-white);">${escapeHtml(user.name || 'Admin')}</div>
-                        <div style="font-size: 11px; color: var(--text-light);">${escapeHtml(getRoleDisplayName(user.role || 'staff'))}</div>
+                    <div>
+                        <div>${escapeHtml(user.name || 'Admin')}</div>
+                        <div>${escapeHtml(getRoleDisplayName(user.role || 'staff'))}</div>
                     </div>
                 </div>
             </div>
@@ -545,6 +555,7 @@ function ensureTherapistLayoutStyles() {
             align-items: center;
             justify-content: space-between;
             gap: 18px;
+            min-height: 60px;
         }
 
         .therapist-top-nav-title {
@@ -554,12 +565,16 @@ function ensureTherapistLayoutStyles() {
             color: var(--text-white);
             margin: 0;
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            line-height: 1.2;
         }
 
         .therapist-top-nav-user {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            flex-shrink: 0;
         }
 
         .therapist-top-nav-user img {
@@ -575,27 +590,32 @@ function ensureTherapistLayoutStyles() {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            justify-content: center;
             text-align: right;
             min-width: 0;
+            line-height: 1.4;
         }
         
         .therapist-top-nav-user > div > div:first-child {
             font-weight: 700;
-            font-size: 13px;
+            font-size: 14px;
             color: var(--text-white);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 150px;
+            line-height: 1.3;
+            margin-bottom: 2px;
         }
         
         .therapist-top-nav-user > div > div:last-child {
-            font-size: 11px;
+            font-size: 12px;
             color: var(--text-light);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 150px;
+            line-height: 1.2;
         }
 
         @media (max-width: 900px) {
@@ -670,9 +690,9 @@ function injectTherapistLayout(options) {
                 <h1 class="therapist-top-nav-title">${escapeHtml(pageTitle)}</h1>
                 <div class="therapist-top-nav-user">
                     <img src="${getProfileImageUrl(user)}" alt="Profile" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2734%27 height=%2734%27%3E%3Crect fill=%27%23334155%27 width=%2734%27 height=%2734%27/%3E%3C/svg%3E';">
-                    <div style="text-align: right;">
-                        <div style="font-weight: 700; font-size: 13px; color: var(--text-white);">${escapeHtml(user.name || 'Therapist')}</div>
-                        <div style="font-size: 11px; color: var(--text-light);">${escapeHtml(getRoleDisplayName(user.role || 'therapist'))}</div>
+                    <div>
+                        <div>${escapeHtml(user.name || 'Therapist')}</div>
+                        <div>${escapeHtml(getRoleDisplayName(user.role || 'therapist'))}</div>
                     </div>
                 </div>
             </div>
@@ -773,5 +793,6 @@ window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
 window.injectTherapistLayout = injectTherapistLayout;
+
 
 
