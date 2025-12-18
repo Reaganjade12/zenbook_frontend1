@@ -625,6 +625,13 @@ const superAdminAPI = {
     },
 
     /**
+     * Get single admin by ID
+     */
+    async getAdmin(id) {
+        return await apiClient.get(`/super-admin/admins/${id}`);
+    },
+
+    /**
      * Create admin
      */
     async createAdmin(adminData) {
@@ -714,4 +721,6 @@ window.therapistAPI = therapistAPI;
 window.staffAPI = staffAPI;
 window.superAdminAPI = superAdminAPI;
 window.profileAPI = profileAPI;
+
+
 
