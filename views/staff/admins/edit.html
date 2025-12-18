@@ -35,6 +35,16 @@
         </div>
 
                     <div class="form-group">
+                        <label for="role">Role *</label>
+                        <select id="role" name="role" required style="cursor: pointer;">
+                            <option value="staff">Admin/Staff</option>
+                            <option value="therapist">Massage Therapist</option>
+                            <option value="customer">Customer</option>
+                        </select>
+                        <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">Select the role for this user account.</small>
+        </div>
+
+                    <div class="form-group">
                         <label for="password">New Password (leave blank to keep current)</label>
                         <input type="password" id="password" name="password" minlength="8">
                         <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">Minimum 8 characters. Leave blank if you don't want to change the password.</small>
@@ -103,6 +113,7 @@
                 const formData = {
                     name: document.getElementById('name').value.trim(),
                     email: document.getElementById('email').value.trim(),
+                    role: document.getElementById('role').value,
                 };
 
                 const password = document.getElementById('password').value;
@@ -136,9 +147,8 @@
 
         async function loadAdmin() {
             try {
-                const response = await superAdminAPI.getAdmins();
-                const admins = response.admins || [];
-                const admin = admins.find(a => a.id == adminId);
+                const response = await superAdminAPI.getAdmin(adminId);
+                const admin = response.admin;
 
                 if (!admin) {
                     alert('Admin not found.');
@@ -148,6 +158,10 @@
 
                 document.getElementById('name').value = admin.name || '';
                 document.getElementById('email').value = admin.email || '';
+                
+                // Set role - map 'cleaner' to 'therapist' for display
+                const role = admin.role === 'cleaner' ? 'therapist' : admin.role;
+                document.getElementById('role').value = role || 'staff';
             } catch (error) {
                 console.error('Error loading admin:', error);
                 alert('Failed to load admin data. Please try again.');
@@ -157,4 +171,5 @@
     </script>
 </body>
 </html>
+
 
