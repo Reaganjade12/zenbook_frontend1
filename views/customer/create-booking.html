@@ -1,142 +1,16 @@
-    <?php
-    $title = 'Book Massage Session - ZenBook';
-    ob_start();
-    ?>
-    <div class="card" style="max-width: 700px; margin: 0 auto;">
-        <div style="text-align: center; margin-bottom: 30px;">
-            <div style="font-size: 48px; margin-bottom: 10px;">✨</div>
-            <h1 style="margin: 0;">Book Your Massage Session</h1>
-            <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Fill in the details to schedule your appointment</p>
-        </div>
-        
-        <form method="POST" action="<?php echo route('customer.booking.store'); ?>">
-            <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
-            
-            <div class="form-group">
-                <label for="booking_date">📅 Appointment Date</label>
-                <input type="date" id="booking_date" name="booking_date" value="<?php echo htmlspecialchars(old('booking_date', '')); ?>" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">
-                <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.</small>
-            </div>
-
-            <div class="form-group">
-                <label for="therapist_id">👨‍⚕️ Select Massage Therapist</label>
-                <select id="therapist_id" name="therapist_id" required style="cursor: pointer;">
-                    <option value="">Choose an available therapist...</option>
-                    <?php if (isset($availableTherapists) && $availableTherapists->count() > 0): ?>
-                        <?php foreach($availableTherapists as $therapist): ?>
-                            <option value="<?php echo $therapist['id']; ?>" <?php echo old('therapist_id') == $therapist['id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($therapist['name']); ?>
-                                <?php if (!empty($therapist['bio'])): ?>
-                                    - <?php echo htmlspecialchars(substr($therapist['bio'], 0, 50)); ?>...
-                                <?php endif; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <option value="" disabled>No therapists available at the moment</option>
-                    <?php endif; ?>
-                </select>
-                <?php if (!isset($availableTherapists) || $availableTherapists->count() == 0): ?>
-                    <small style="color: #ef4444; font-size: 12px; display: block; margin-top: 5px;">⚠️ No therapists are currently available. Please check back later.</small>
-                <?php else: ?>
-                    <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">Only available therapists are shown</small>
-                <?php endif; ?>
-            </div>
-
-            <div class="form-group">
-                <label for="booking_time">🕐 Appointment Time</label>
-                <input type="time" id="booking_time" name="booking_time" value="<?php echo htmlspecialchars(old('booking_time', '')); ?>" required>
-            </div>
-
-            <div class="form-group" style="position: relative;">
-                <label for="address">📍 Service Location</label>
-                <input type="text" id="address" name="address" value="<?php echo htmlspecialchars(old('address', '')); ?>" required placeholder="Start typing your address or click on the map below" autocomplete="off">
-                <div id="address-suggestions" style="display: none; max-height: 200px; overflow-y: auto; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--dark-border); border-radius: 8px; margin-top: 5px; z-index: 1000; position: absolute; width: calc(100% - 36px); box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
-                <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">💡 Type your address or click on the map to select a location</small>
-                <div id="map" style="width: 100%; height: 300px; margin-top: 15px; border-radius: 12px; border: 2px solid var(--dark-border); overflow: hidden;"></div>
-                <input type="hidden" id="latitude" name="latitude" value="<?php echo htmlspecialchars(old('latitude', '')); ?>">
-                <input type="hidden" id="longitude" name="longitude" value="<?php echo htmlspecialchars(old('longitude', '')); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="service_type">💆 Massage Type</label>
-                <select id="service_type" name="service_type" required style="cursor: pointer;">
-                    <option value="">Select massage type</option>
-                    <option value="Swedish Massage" <?php echo old('service_type') == 'Swedish Massage' ? 'selected' : ''; ?>>Swedish Massage - Gentle & Relaxing</option>
-                    <option value="Deep Tissue Massage" <?php echo old('service_type') == 'Deep Tissue Massage' ? 'selected' : ''; ?>>Deep Tissue Massage - Intense Relief</option>
-                    <option value="Aromatherapy Massage" <?php echo old('service_type') == 'Aromatherapy Massage' ? 'selected' : ''; ?>>Aromatherapy Massage - Essential Oils</option>
-                    <option value="Hot Stone Massage" <?php echo old('service_type') == 'Hot Stone Massage' ? 'selected' : ''; ?>>Hot Stone Massage - Warm Therapy</option>
-                    <option value="Prenatal Massage" <?php echo old('service_type') == 'Prenatal Massage' ? 'selected' : ''; ?>>Prenatal Massage - For Expecting Mothers</option>
-                    <option value="Sports Massage" <?php echo old('service_type') == 'Sports Massage' ? 'selected' : ''; ?>>Sports Massage - Athletic Recovery</option>
-                    <option value="Thai Massage" <?php echo old('service_type') == 'Thai Massage' ? 'selected' : ''; ?>>Thai Massage - Stretching & Energy</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="notes">📝 Special Requests or Notes (Optional)</label>
-                <textarea id="notes" name="notes" rows="4" placeholder="Any specific areas to focus on, allergies, or preferences..."><?php echo htmlspecialchars(old('notes', '')); ?></textarea>
-            </div>
-
-            <div style="display: flex; gap: 12px; margin-top: 30px;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Book Session</button>
-                <a href="<?php echo route('customer.dashboard'); ?>" class="btn" style="background: white; color: var(--text-dark); border: 2px solid var(--border); flex: 1; text-align: center;">Cancel</a>
-            </div>
-        </form>
-    </div>
-
-    <script>
-    // Prevent same-day and past dates from being selected
-    document.addEventListener('DOMContentLoaded', function() {
-        const bookingDateInput = document.getElementById('booking_date');
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const minDate = tomorrow.toISOString().split('T')[0]; // Tomorrow's date
-        
-        // Set minimum date attribute to tomorrow
-        bookingDateInput.setAttribute('min', minDate);
-        
-        // Add validation on change
-        bookingDateInput.addEventListener('change', function() {
-            const selectedDate = new Date(this.value);
-            const tomorrowDate = new Date();
-            tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-            tomorrowDate.setHours(0, 0, 0, 0);
-            selectedDate.setHours(0, 0, 0, 0);
-            
-            // Check if selected date is before tomorrow (today or earlier)
-            if (selectedDate < tomorrowDate) {
-                alert('⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.');
-                this.value = '';
-                this.focus();
-            }
-        });
-        
-        // Prevent form submission if same-day or past date is somehow selected
-        const form = bookingDateInput.closest('form');
-        form.addEventListener('submit', function(e) {
-            const selectedDate = new Date(bookingDateInput.value);
-            const tomorrowDate = new Date();
-            tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-            tomorrowDate.setHours(0, 0, 0, 0);
-            selectedDate.setHours(0, 0, 0, 0);
-            
-            // Check if selected date is before tomorrow (today or earlier)
-            if (selectedDate < tomorrowDate) {
-                e.preventDefault();
-                alert('⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.');
-                bookingDateInput.focus();
-                return false;
-            }
-        });
-    });
-    </script>
-    <?php
-    $content = ob_get_clean();
-    ob_start();
-    ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Book Massage Session - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- CSS - Try multiple paths for GitHub Pages compatibility -->
+    <link rel="stylesheet" href="../../css/common-layout.css" onerror="this.onerror=null; this.href='/zenbook_frontend1/css/common-layout.css'">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         #map { z-index: 1; }
         .leaflet-container {
@@ -165,262 +39,568 @@
             color: var(--text-light);
             font-size: 12px;
         }
+        #messageContainer {
+            margin-bottom: 20px;
+        }
     </style>
-    <script>
-    let map;
-    let marker;
-    let addressInput;
-    let suggestionsDiv;
-    let geocodeTimeout;
-
-    // Initialize map
-    document.addEventListener('DOMContentLoaded', function() {
-        addressInput = document.getElementById('address');
-        suggestionsDiv = document.getElementById('address-suggestions');
-        
-        // Default center (you can change this to your preferred default location)
-        const defaultCenter = [40.7128, -74.0060]; // New York City [lat, lng]
-        
-        // Initialize map
-        map = L.map('map', {
-            center: defaultCenter,
-            zoom: 13,
-            zoomControl: true
-        });
-        
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(map);
-        
-        // Create custom marker icon
-        const markerIcon = L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        });
-        
-        // Initialize marker
-        marker = L.marker(defaultCenter, {
-            draggable: true,
-            icon: markerIcon
-        }).addTo(map);
-        
-        // Address autocomplete using Nominatim (OpenStreetMap)
-        addressInput.addEventListener('input', function() {
-            const query = this.value.trim();
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div class="container">
+        <div class="card" style="max-width: 700px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">✨</div>
+                <h1 style="margin: 0;">Book Your Massage Session</h1>
+                <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Fill in the details to schedule your appointment</p>
+            </div>
             
-            if (query.length < 3) {
-                suggestionsDiv.style.display = 'none';
+            <div id="messageContainer"></div>
+            
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label for="booking_date">📅 Appointment Date</label>
+                    <input type="date" id="booking_date" name="booking_date" required>
+                    <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="therapist_id">👨‍⚕️ Select Massage Therapist</label>
+                    <select id="therapist_id" name="therapist_id" required style="cursor: pointer;">
+                        <option value="">Loading therapists...</option>
+                    </select>
+                    <small id="therapist-help" style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">Only available therapists are shown</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="booking_time">🕐 Appointment Time</label>
+                    <input type="time" id="booking_time" name="booking_time" required>
+                </div>
+
+                <div class="form-group" style="position: relative;">
+                    <label for="address">📍 Service Location</label>
+                    <input type="text" id="address" name="address" required placeholder="Start typing your address or click on the map below" autocomplete="off">
+                    <div id="address-suggestions" style="display: none; max-height: 200px; overflow-y: auto; background: rgba(15, 23, 42, 0.95); border: 1px solid var(--dark-border); border-radius: 8px; margin-top: 5px; z-index: 1000; position: absolute; width: calc(100% - 36px); box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
+                    <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">💡 Type your address or click on the map to select a location</small>
+                    <div id="map" style="width: 100%; height: 300px; margin-top: 15px; border-radius: 12px; border: 2px solid var(--dark-border); overflow: hidden;"></div>
+                    <input type="hidden" id="latitude" name="latitude" required>
+                    <input type="hidden" id="longitude" name="longitude" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="service_type">💆 Massage Type</label>
+                    <select id="service_type" name="service_type" required style="cursor: pointer;">
+                        <option value="">Select massage type</option>
+                        <option value="Swedish Massage">Swedish Massage - Gentle & Relaxing</option>
+                        <option value="Deep Tissue Massage">Deep Tissue Massage - Intense Relief</option>
+                        <option value="Aromatherapy Massage">Aromatherapy Massage - Essential Oils</option>
+                        <option value="Hot Stone Massage">Hot Stone Massage - Warm Therapy</option>
+                        <option value="Prenatal Massage">Prenatal Massage - For Expecting Mothers</option>
+                        <option value="Sports Massage">Sports Massage - Athletic Recovery</option>
+                        <option value="Thai Massage">Thai Massage - Stretching & Energy</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">📝 Special Requests or Notes (Optional)</label>
+                    <textarea id="notes" name="notes" rows="4" placeholder="Any specific areas to focus on, allergies, or preferences..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;" id="submitBtn">Book Session</button>
+                    <a href="dashboard.html" class="btn" style="background: white; color: var(--text-dark); border: 2px solid var(--border); flex: 1; text-align: center;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth-utils.js"></script>
+    <script src="../../js/layout-utils.js"></script>
+    <script>
+        let map;
+        let marker;
+        let addressInput;
+        let suggestionsDiv;
+        let geocodeTimeout;
+        let currentUser = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            currentUser = await requireAuth('customer');
+            if (!currentUser) return;
+
+            // Load navbar
+            const navbarContainer = document.getElementById('navbar-container');
+            navbarContainer.innerHTML = generateNavbar(currentUser);
+
+            // Set minimum date to tomorrow
+            const bookingDateInput = document.getElementById('booking_date');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const minDate = tomorrow.toISOString().split('T')[0];
+            bookingDateInput.setAttribute('min', minDate);
+
+            // Load available therapists
+            await loadTherapists();
+
+            // Initialize map
+            initializeMap();
+
+            // Setup form validation
+            setupFormValidation();
+        });
+
+        async function loadTherapists() {
+            const therapistSelect = document.getElementById('therapist_id');
+            const therapistHelp = document.getElementById('therapist-help');
+
+            try {
+                const response = await bookingAPI.getAvailableTherapists();
+                const therapists = response.therapists || [];
+
+                therapistSelect.innerHTML = '<option value="">Choose an available therapist...</option>';
+
+                if (therapists.length === 0) {
+                    therapistSelect.innerHTML = '<option value="" disabled>No therapists available at the moment</option>';
+                    therapistHelp.textContent = '⚠️ No therapists are currently available. Please check back later.';
+                    therapistHelp.style.color = '#ef4444';
+                } else {
+                    therapists.forEach(therapist => {
+                        const option = document.createElement('option');
+                        option.value = therapist.id;
+                        const bioSnippet = therapist.bio ? ' - ' + therapist.bio.substring(0, 50) + '...' : '';
+                        option.textContent = therapist.name + bioSnippet;
+                        therapistSelect.appendChild(option);
+                    });
+                    therapistHelp.textContent = 'Only available therapists are shown';
+                    therapistHelp.style.color = 'var(--text-light)';
+                }
+            } catch (error) {
+                console.error('Error loading therapists:', error);
+                therapistSelect.innerHTML = '<option value="" disabled>Error loading therapists</option>';
+                therapistHelp.textContent = '⚠️ Failed to load therapists. Please refresh the page.';
+                therapistHelp.style.color = '#ef4444';
+            }
+        }
+
+        function initializeMap() {
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error('Leaflet library not loaded');
+                return;
+            }
+
+            // Check if map element exists
+            const mapElement = document.getElementById('map');
+            if (!mapElement) {
+                console.error('Map element not found');
+                return;
+            }
+
+            addressInput = document.getElementById('address');
+            suggestionsDiv = document.getElementById('address-suggestions');
+            
+            if (!addressInput || !suggestionsDiv) {
+                console.error('Required form elements not found');
                 return;
             }
             
-            clearTimeout(geocodeTimeout);
-            geocodeTimeout = setTimeout(() => {
-                searchAddress(query);
-            }, 300); // Debounce 300ms
-        });
-        
-        // Hide suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target !== addressInput && !suggestionsDiv.contains(e.target)) {
-                suggestionsDiv.style.display = 'none';
+            // Default center
+            const defaultCenter = [40.7128, -74.0060]; // New York City [lat, lng]
+            
+            try {
+                // Initialize map
+                map = L.map('map', {
+                    center: defaultCenter,
+                    zoom: 13,
+                    zoomControl: true
+                });
+            } catch (error) {
+                console.error('Error initializing map:', error);
+                return;
             }
-        });
-        
-        // When user clicks on map
-        map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
             
-            marker.setLatLng([lat, lng]);
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
             
-            // Update hidden fields
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-            
-            // Reverse geocode to get address
-            reverseGeocode(lat, lng);
-        });
-        
-        // When user drags marker
-        marker.on('dragend', function(e) {
-            const lat = e.target.getLatLng().lat;
-            const lng = e.target.getLatLng().lng;
-            
-            // Update hidden fields
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-            
-            // Reverse geocode to get address
-            reverseGeocode(lat, lng);
-        });
-        
-        // Try to get user's current location (with delay to ensure map is ready)
-        setTimeout(() => {
-            if (navigator.geolocation && map) {
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        
-                        if (map && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
-                            try {
-                                map.setView([lat, lng], 15);
-                                marker.setLatLng([lat, lng]);
-                                
-                                // Update hidden fields
-                                const latInput = document.getElementById('latitude');
-                                const lngInput = document.getElementById('longitude');
-                                if (latInput) latInput.value = lat;
-                                if (lngInput) lngInput.value = lng;
-                                
-                                // Delay reverse geocode to avoid CORS issues on initial load
-                                setTimeout(() => reverseGeocode(lat, lng), 500);
-                            } catch (error) {
-                                console.error('Error setting map view:', error);
-                            }
-                        }
-                    },
-                    function(error) {
-                        console.log('Geolocation error:', error);
-                        // Keep default center if geolocation fails - this is normal
-                    },
-                    {
-                        timeout: 5000,
-                        enableHighAccuracy: false
-                    }
-                );
-            }
-        }, 100);
-        
-        // Restore old values if form was submitted with errors
-        const oldAddress = addressInput.value;
-        const oldLat = document.getElementById('latitude').value;
-        const oldLng = document.getElementById('longitude').value;
-        
-        if (oldAddress && oldLat && oldLng) {
-            const lat = parseFloat(oldLat);
-            const lng = parseFloat(oldLng);
-            // Validate coordinates before using them
-            if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) && map) {
-                try {
-                    map.setView([lat, lng], 16);
-                    marker.setLatLng([lat, lng]);
-                } catch (error) {
-                    console.error('Error restoring map view:', error);
-                }
-            }
-        }
-    });
-
-    // Search address using Nominatim (OpenStreetMap geocoding)
-    function searchAddress(query) {
-        // Use Nominatim API (free, no API key needed)
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
-        
-        fetch(url, {
-            headers: {
-                'User-Agent': 'ZenBook Massage Booking System' // Required by Nominatim
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.length > 0) {
-                displaySuggestions(data);
-            } else {
-                suggestionsDiv.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Geocoding error:', error);
-            suggestionsDiv.style.display = 'none';
-        });
-    }
-
-    // Display address suggestions
-    function displaySuggestions(results) {
-        suggestionsDiv.innerHTML = '';
-        
-        results.forEach(result => {
-            const div = document.createElement('div');
-            div.className = 'address-suggestion';
-            
-            // Format the display name nicely
-            const displayName = result.display_name;
-            const parts = displayName.split(',');
-            const mainAddress = parts.slice(0, 2).join(', ').trim();
-            const details = parts.slice(2).join(', ').trim();
-            
-            div.innerHTML = `<strong>${mainAddress}</strong>${details ? '<small>' + details + '</small>' : ''}`;
-            
-            div.addEventListener('click', function() {
-                const lat = parseFloat(result.lat);
-                const lng = parseFloat(result.lon);
-                
-                addressInput.value = result.display_name;
-                suggestionsDiv.style.display = 'none';
-                
-                // Update map and marker
-                map.setView([lat, lng], 16);
-                marker.setLatLng([lat, lng]);
-                
-                // Update hidden fields
-                document.getElementById('latitude').value = lat;
-                document.getElementById('longitude').value = lng;
+            // Create custom marker icon
+            const markerIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
             });
             
-            suggestionsDiv.appendChild(div);
-        });
-        
-        suggestionsDiv.style.display = 'block';
-    }
-
-    // Reverse geocode (convert coordinates to address)
-    function reverseGeocode(lat, lng) {
-        // Validate coordinates
-        if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
-            console.warn('Invalid coordinates for reverse geocoding:', lat, lng);
-            if (addressInput) {
-                addressInput.value = '';
+            // Initialize marker
+            marker = L.marker(defaultCenter, {
+                draggable: true,
+                icon: markerIcon
+            }).addTo(map);
+            
+            // Address autocomplete
+            addressInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                if (query.length < 3) {
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+                
+                clearTimeout(geocodeTimeout);
+                geocodeTimeout = setTimeout(() => {
+                    searchAddress(query);
+                }, 300);
+            });
+            
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target !== addressInput && !suggestionsDiv.contains(e.target)) {
+                    suggestionsDiv.style.display = 'none';
+                }
+            });
+            
+            // When user clicks on map
+            map.on('click', function(e) {
+                if (!map || !marker) return;
+                
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                
+                if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+                    try {
+                        marker.setLatLng([lat, lng]);
+                        const latInput = document.getElementById('latitude');
+                        const lngInput = document.getElementById('longitude');
+                        if (latInput) latInput.value = lat;
+                        if (lngInput) lngInput.value = lng;
+                        reverseGeocode(lat, lng);
+                    } catch (error) {
+                        console.error('Error handling map click:', error);
+                    }
+                }
+            });
+            
+            // When user drags marker
+            marker.on('dragend', function(e) {
+                if (!map || !marker) return;
+                
+                const lat = e.target.getLatLng().lat;
+                const lng = e.target.getLatLng().lng;
+                
+                if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+                    try {
+                        const latInput = document.getElementById('latitude');
+                        const lngInput = document.getElementById('longitude');
+                        if (latInput) latInput.value = lat;
+                        if (lngInput) lngInput.value = lng;
+                        reverseGeocode(lat, lng);
+                    } catch (error) {
+                        console.error('Error handling marker drag:', error);
+                    }
+                }
+            });
+            
+            // Set initial coordinates and validate/clear any existing invalid values
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            if (latInput && lngInput) {
+                // Check if there are existing values and validate them
+                const existingLat = parseFloat(latInput.value);
+                const existingLng = parseFloat(lngInput.value);
+                
+                // If existing values are invalid, use defaults
+                if (isNaN(existingLat) || isNaN(existingLng) || !isFinite(existingLat) || !isFinite(existingLng)) {
+                    latInput.value = defaultCenter[0];
+                    lngInput.value = defaultCenter[1];
+                } else {
+                    // Existing values are valid, use them but ensure map is set correctly
+                    try {
+                        if (map) {
+                            map.setView([existingLat, existingLng], 13);
+                            marker.setLatLng([existingLat, existingLng]);
+                        }
+                    } catch (error) {
+                        console.warn('Error setting map to existing coordinates:', error);
+                        // Fall back to defaults if there's an error
+                        latInput.value = defaultCenter[0];
+                        lngInput.value = defaultCenter[1];
+                    }
+                }
             }
-            return;
+
+            // Try to get user's current location (with delay to ensure map is ready)
+            setTimeout(() => {
+                if (navigator.geolocation && map) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            if (map && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+                                try {
+                                    map.setView([lat, lng], 15);
+                                    marker.setLatLng([lat, lng]);
+                                    const latInputEl = document.getElementById('latitude');
+                                    const lngInputEl = document.getElementById('longitude');
+                                    if (latInputEl) latInputEl.value = lat;
+                                    if (lngInputEl) lngInputEl.value = lng;
+                                    // Delay reverse geocode slightly to avoid CORS issues on initial load
+                                    setTimeout(() => reverseGeocode(lat, lng), 500);
+                                } catch (error) {
+                                    console.error('Error setting map view:', error);
+                                }
+                            }
+                        },
+                        function(error) {
+                            console.log('Geolocation error:', error);
+                            // Use default center if geolocation fails - this is normal
+                        },
+                        {
+                            timeout: 5000,
+                            enableHighAccuracy: false
+                        }
+                    );
+                }
+            }, 100);
         }
 
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
-        
-        fetch(url, {
-            headers: {
-                'User-Agent': 'ZenBook Massage Booking System'
+        function searchAddress(query) {
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
+            
+            fetch(url, {
+                headers: {
+                    'User-Agent': 'ZenBook Massage Booking System'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    displaySuggestions(data);
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                suggestionsDiv.style.display = 'none';
+            });
+        }
+
+        function displaySuggestions(results) {
+            suggestionsDiv.innerHTML = '';
+            
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = 'address-suggestion';
+                
+                const displayName = result.display_name;
+                const parts = displayName.split(',');
+                const mainAddress = parts.slice(0, 2).join(', ').trim();
+                const details = parts.slice(2).join(', ').trim();
+                
+                div.innerHTML = `<strong>${escapeHtml(mainAddress)}</strong>${details ? '<small>' + escapeHtml(details) + '</small>' : ''}`;
+                
+                div.addEventListener('click', function() {
+                    if (!map || !marker) return;
+                    
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    
+                    if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+                        try {
+                            addressInput.value = result.display_name;
+                            suggestionsDiv.style.display = 'none';
+                            
+                            map.setView([lat, lng], 16);
+                            marker.setLatLng([lat, lng]);
+                            const latInput = document.getElementById('latitude');
+                            const lngInput = document.getElementById('longitude');
+                            if (latInput) latInput.value = lat;
+                            if (lngInput) lngInput.value = lng;
+                        } catch (error) {
+                            console.error('Error setting map view from address selection:', error);
+                        }
+                    }
+                });
+                
+                suggestionsDiv.appendChild(div);
+            });
+            
+            suggestionsDiv.style.display = 'block';
+        }
+
+        function reverseGeocode(lat, lng) {
+            // Validate coordinates
+            if (isNaN(lat) || isNaN(lng)) {
+                console.warn('Invalid coordinates for reverse geocoding:', lat, lng);
+                if (addressInput) {
+                    addressInput.value = '';
+                }
+                return;
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
+            
+            fetch(url, {
+                headers: {
+                    'User-Agent': 'ZenBook Massage Booking System'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.display_name && addressInput) {
+                    addressInput.value = data.display_name;
+                } else if (addressInput) {
+                    addressInput.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+                }
+            })
+            .catch(error => {
+                // CORS or network error - just use coordinates as address
+                console.warn('Reverse geocoding failed (CORS or network issue):', error.message);
+                if (addressInput) {
+                    addressInput.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+                }
+            });
+        }
+
+        async function checkForDuplicateBooking(bookingDate, bookingTime, serviceType) {
+            try {
+                // Get all existing bookings
+                const response = await bookingAPI.getAll();
+                const bookings = response.bookings || [];
+                
+                // Check if there's a duplicate
+                const duplicate = bookings.find(booking => {
+                    const bookingDateStr = new Date(booking.booking_date).toISOString().split('T')[0];
+                    const bookingTimeStr = booking.booking_time;
+                    // Handle both time formats (HH:mm:ss and HH:mm)
+                    const normalizedTime = bookingTimeStr.length > 5 ? bookingTimeStr.substring(0, 5) : bookingTimeStr;
+                    const normalizedInputTime = bookingTime.length > 5 ? bookingTime.substring(0, 5) : bookingTime;
+                    
+                    return bookingDateStr === bookingDate && 
+                           normalizedTime === normalizedInputTime && 
+                           booking.service_type === serviceType;
+                });
+                
+                return duplicate !== undefined;
+            } catch (error) {
+                console.error('Error checking for duplicate booking:', error);
+                // If check fails, let backend handle it
+                return false;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.display_name && addressInput) {
-                addressInput.value = data.display_name;
-            } else if (addressInput) {
-                addressInput.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+        }
+
+        function setupFormValidation() {
+            const bookingDateInput = document.getElementById('booking_date');
+            const bookingTimeInput = document.getElementById('booking_time');
+            const serviceTypeInput = document.getElementById('service_type');
+            const form = document.getElementById('bookingForm');
+            
+            bookingDateInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const tomorrowDate = new Date();
+                tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+                tomorrowDate.setHours(0, 0, 0, 0);
+                selectedDate.setHours(0, 0, 0, 0);
+                
+                if (selectedDate < tomorrowDate) {
+                    showMessage('⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.', 'error');
+                    this.value = '';
+                    this.focus();
+                }
+            });
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const selectedDate = new Date(bookingDateInput.value);
+                const tomorrowDate = new Date();
+                tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+                tomorrowDate.setHours(0, 0, 0, 0);
+                selectedDate.setHours(0, 0, 0, 0);
+                
+                if (selectedDate < tomorrowDate) {
+                    showMessage('⚠️ Bookings must be made for tomorrow or later. Same-day bookings are not available.', 'error');
+                    bookingDateInput.focus();
+                    return;
+                }
+
+                // Validate location
+                const latitude = document.getElementById('latitude').value;
+                const longitude = document.getElementById('longitude').value;
+                if (!latitude || !longitude) {
+                    showMessage('Please select a location on the map or choose from address suggestions.', 'error');
+                    return;
+                }
+
+                const bookingDate = bookingDateInput.value;
+                const bookingTime = bookingTimeInput.value;
+                const serviceType = serviceTypeInput.value;
+
+                // Check for duplicate booking before submitting
+                const isDuplicate = await checkForDuplicateBooking(bookingDate, bookingTime, serviceType);
+                if (isDuplicate) {
+                    showMessage('⚠️ You already have a booking for this date, time, and massage type. Please choose a different date, time, or massage type.', 'error');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Booking...';
+
+                try {
+                    const formData = {
+                        booking_date: bookingDate,
+                        therapist_id: document.getElementById('therapist_id').value,
+                        booking_time: bookingTime,
+                        address: document.getElementById('address').value,
+                        latitude: latitude,
+                        longitude: longitude,
+                        service_type: serviceType,
+                        notes: document.getElementById('notes').value
+                    };
+
+                    await bookingAPI.create(formData);
+                    
+                    showMessage('✅ Booking created successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('Booking error:', error);
+                    // Display error message from backend (which includes duplicate booking errors)
+                    showMessage(error.message || 'Failed to create booking. Please try again.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
+        }
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(message)}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    container.innerHTML = '';
+                }, 5000);
             }
-        })
-        .catch(error => {
-            // CORS or network error - just use coordinates as address
-            console.warn('Reverse geocoding failed (CORS or network issue):', error.message);
-            if (addressInput) {
-                addressInput.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
-            }
-        });
-    }
+        }
     </script>
-    <?php
-    $scripts = ob_get_clean();
-    include resource_path('views/layouts/app.html');
-    ?>
+</body>
+</html>
