@@ -55,8 +55,16 @@ const redirectToLogin = () => {
     if (viewsIndex > 1) {
         basePath = parts.slice(0, viewsIndex).join('/');
     }
+    
+    // Ensure basePath starts with / and doesn't end with /
+    if (basePath && !basePath.startsWith('/')) {
+        basePath = '/' + basePath;
+    }
+    if (basePath.endsWith('/')) {
+        basePath = basePath.slice(0, -1);
+    }
 
-    const loginPath = `${basePath}/views/auth/login.html`;
+    const loginPath = window.location.origin + basePath + '/views/auth/login.html';
     window.location.href = loginPath;
 };
 
