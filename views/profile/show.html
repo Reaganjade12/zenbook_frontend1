@@ -8,6 +8,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../css/common-layout.css">
+    <style>
+        /* Make Personal Information grid responsive */
+        @media (max-width: 768px) {
+            .profile-form-grid,
+            .profile-account-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .profile-form-grid,
+            .profile-account-grid {
+                gap: 12px !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="sidebar-container"></div>
@@ -59,7 +76,7 @@
                 <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Personal Information</h3>
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div class="profile-form-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div class="form-group">
                             <label for="name">👤 Full Name</label>
                             <input type="text" id="name" name="name" required>
@@ -102,7 +119,7 @@
                 <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Account Information</h3>
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div class="profile-account-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                 <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
                             <label style="display: block; color: var(--text-light); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Role</label>
                             <p id="account-role" style="font-weight: 700; color: white; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;"></p>
@@ -615,3 +632,4 @@ function previewImage(input) {
 </script>
 </body>
 </html>
+
