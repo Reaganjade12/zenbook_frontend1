@@ -278,6 +278,11 @@ textarea {
     color: #a78bfa;
     border: 1px solid rgba(139, 92, 246, 0.3);
 }
+.badge-cancelled {
+    background: rgba(107, 114, 128, 0.2);
+    color: #9ca3af;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
 .filter-buttons {
     display: flex;
     gap: 12px;
@@ -412,3 +417,4 @@ h2 {
         font-size: 16px;
     }
 }
+
