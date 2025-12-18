@@ -703,9 +703,84 @@ function ensureTherapistLayoutStyles() {
             line-height: 1.2;
         }
 
-        @media (max-width: 900px) {
+        .mobile-menu-toggle {
+            display: none;
+        }
+        
+        .mobile-menu-overlay {
+            display: none;
+        }
+        
+        @media (max-width: 1024px) {
             .therapist-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .therapist-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-overlay {
                 display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .mobile-menu-overlay.active {
+                display: block;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                z-index: 1001;
+                background: rgba(30, 41, 59, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 8px;
+                padding: 10px;
+                cursor: pointer;
+                color: var(--text-white);
+                font-size: 20px;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            
+            .mobile-menu-toggle:hover {
+                background: rgba(30, 41, 59, 1);
+                border-color: rgba(59, 130, 246, 0.4);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                top: 12px;
+                left: 12px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-menu-toggle {
+                top: 10px;
+                left: 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                padding: 8px;
             }
         }
     `;
@@ -870,6 +945,49 @@ function refreshLayoutImages(user) {
     console.log('[refreshLayoutImages] ✅ Image refresh complete');
 }
 
+// Mobile menu toggle functions
+function toggleMobileMenu(type) {
+    const sidebar = document.getElementById(`${type}-sidebar`);
+    const overlay = document.getElementById(`${type}-mobile-overlay`);
+    
+    if (sidebar && overlay) {
+        const isOpen = sidebar.classList.contains('mobile-open');
+        if (isOpen) {
+            closeMobileMenu(type);
+        } else {
+            sidebar.classList.add('mobile-open');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+}
+
+function closeMobileMenu(type) {
+    const sidebar = document.getElementById(`${type}-sidebar`);
+    const overlay = document.getElementById(`${type}-mobile-overlay`);
+    
+    if (sidebar && overlay) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Close mobile menu when clicking outside or on escape key
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('mobile-menu-overlay')) {
+        const type = e.target.id.replace('-mobile-overlay', '');
+        closeMobileMenu(type);
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMobileMenu('admin');
+        closeMobileMenu('therapist');
+    }
+});
+
 // Export
 window.generateNavbar = generateNavbar;
 window.refreshLayoutImages = refreshLayoutImages;
@@ -880,7 +998,5 @@ window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
 window.injectTherapistLayout = injectTherapistLayout;
-
-
-
-
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
