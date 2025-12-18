@@ -258,6 +258,10 @@ function ensureAdminLayoutStyles() {
             display: flex;
             align-items: center;
             line-height: 1.2;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .admin-top-nav-user {
@@ -308,9 +312,84 @@ function ensureAdminLayoutStyles() {
             line-height: 1.2;
         }
 
-        @media (max-width: 900px) {
+        .mobile-menu-toggle {
+            display: none;
+        }
+        
+        .mobile-menu-overlay {
+            display: none;
+        }
+        
+        @media (max-width: 1024px) {
             .admin-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .admin-sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-overlay {
                 display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .mobile-menu-overlay.active {
+                display: block;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                z-index: 1001;
+                background: rgba(30, 41, 59, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(59, 130, 246, 0.2);
+                border-radius: 8px;
+                padding: 10px;
+                cursor: pointer;
+                color: var(--text-white);
+                font-size: 20px;
+                width: 44px;
+                height: 44px;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            
+            .mobile-menu-toggle:hover {
+                background: rgba(30, 41, 59, 1);
+                border-color: rgba(59, 130, 246, 0.4);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                top: 12px;
+                left: 12px;
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-menu-toggle {
+                top: 10px;
+                left: 10px;
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+                padding: 8px;
             }
         }
     `;
@@ -349,7 +428,9 @@ function injectAdminLayout(options) {
         const isSuperAdmin = user.role === 'super_admin';
 
         sidebarContainer.innerHTML = `
-            <aside class="admin-sidebar">
+            <div class="mobile-menu-overlay" id="admin-mobile-overlay" onclick="toggleMobileMenu('admin')"></div>
+            <button class="mobile-menu-toggle" id="admin-mobile-toggle" onclick="toggleMobileMenu('admin')" aria-label="Toggle menu">☰</button>
+            <aside class="admin-sidebar" id="admin-sidebar">
                 <div class="admin-sidebar-header">
                     <div class="admin-sidebar-logo">●</div>
                     <div class="admin-sidebar-title">ZenBook</div>
@@ -568,6 +649,10 @@ function ensureTherapistLayoutStyles() {
             display: flex;
             align-items: center;
             line-height: 1.2;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .therapist-top-nav-user {
@@ -644,17 +729,19 @@ function injectTherapistLayout(options) {
         const profileHref = buildViewsHref('profile/show.html');
 
         sidebarContainer.innerHTML = `
-            <aside class="therapist-sidebar">
+            <div class="mobile-menu-overlay" id="therapist-mobile-overlay" onclick="toggleMobileMenu('therapist')"></div>
+            <button class="mobile-menu-toggle" id="therapist-mobile-toggle" onclick="toggleMobileMenu('therapist')" aria-label="Toggle menu">☰</button>
+            <aside class="therapist-sidebar" id="therapist-sidebar">
                 <div class="therapist-sidebar-header">
                     <div class="therapist-sidebar-logo">●</div>
                     <div class="therapist-sidebar-title">ZenBook</div>
                 </div>
 
                 <nav class="therapist-sidebar-menu">
-                    <a class="therapist-menu-item ${active === 'dashboard' ? 'active' : ''}" href="${dashboardHref}">Dashboard</a>
-                    <a class="therapist-menu-item ${active === 'bookings' ? 'active' : ''}" href="${bookingsHref}">Manage Bookings</a>
-                    <a class="therapist-menu-item ${active === 'customers' ? 'active' : ''}" href="${customersHref}">My Customers</a>
-                    <a class="therapist-menu-item ${active === 'profile' ? 'active' : ''}" href="${profileHref}">My Profile</a>
+                    <a class="therapist-menu-item ${active === 'dashboard' ? 'active' : ''}" href="${dashboardHref}" onclick="closeMobileMenu('therapist')">Dashboard</a>
+                    <a class="therapist-menu-item ${active === 'bookings' ? 'active' : ''}" href="${bookingsHref}" onclick="closeMobileMenu('therapist')">Manage Bookings</a>
+                    <a class="therapist-menu-item ${active === 'customers' ? 'active' : ''}" href="${customersHref}" onclick="closeMobileMenu('therapist')">My Customers</a>
+                    <a class="therapist-menu-item ${active === 'profile' ? 'active' : ''}" href="${profileHref}" onclick="closeMobileMenu('therapist')">My Profile</a>
                 </nav>
 
                 <div class="therapist-sidebar-footer">
@@ -793,6 +880,7 @@ window.getStatusBadgeClass = getStatusBadgeClass;
 window.formatStatus = formatStatus;
 window.injectAdminLayout = injectAdminLayout;
 window.injectTherapistLayout = injectTherapistLayout;
+
 
 
 
