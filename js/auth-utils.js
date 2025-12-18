@@ -3,10 +3,61 @@
  * Helper functions for checking authentication and loading user data
  */
 
+// Helper function to build absolute path for redirects
+function buildLoginPath() {
+    const currentPath = window.location.pathname;
+    let basePath = '';
+    
+    // Extract base path
+    if (currentPath.includes('/views/')) {
+        basePath = currentPath.split('/views/')[0];
+    }
+    
+    // Ensure basePath starts with / and doesn't end with /
+    if (basePath && !basePath.startsWith('/')) {
+        basePath = '/' + basePath;
+    }
+    if (basePath.endsWith('/')) {
+        basePath = basePath.slice(0, -1);
+    }
+    
+    return window.location.origin + basePath + '/views/auth/login.html';
+}
+
+// Helper function to build dashboard path
+function buildDashboardPath(role) {
+    const currentPath = window.location.pathname;
+    let basePath = '';
+    
+    // Extract base path
+    if (currentPath.includes('/views/')) {
+        basePath = currentPath.split('/views/')[0];
+    }
+    
+    // Ensure basePath starts with / and doesn't end with /
+    if (basePath && !basePath.startsWith('/')) {
+        basePath = '/' + basePath;
+    }
+    if (basePath.endsWith('/')) {
+        basePath = basePath.slice(0, -1);
+    }
+    
+    let dashboardPath = '';
+    if (role === 'staff' || role === 'super_admin') {
+        dashboardPath = basePath + '/views/staff/dashboard.html';
+    } else if (role === 'therapist' || role === 'cleaner') {
+        dashboardPath = basePath + '/views/therapist/dashboard.html';
+    } else {
+        dashboardPath = basePath + '/views/customer/dashboard.html';
+    }
+    
+    return window.location.origin + dashboardPath;
+}
+
 // Check if user is authenticated and redirect if not
 async function requireAuth(requiredRole = null) {
     if (!TokenManager.isAuthenticated()) {
-        window.location.href = '../auth/login.html';
+        window.location.href = buildLoginPath();
         return false;
     }
 
@@ -25,13 +76,7 @@ async function requireAuth(requiredRole = null) {
             const allowedRoles = roleMap[requiredRole] || [requiredRole];
             if (!allowedRoles.includes(user.role)) {
                 // Redirect based on user role
-                if (user.role === 'staff' || user.role === 'super_admin') {
-                    window.location.href = '../staff/dashboard.html';
-                } else if (user.role === 'therapist' || user.role === 'cleaner') {
-                    window.location.href = '../therapist/dashboard.html';
-                } else {
-                    window.location.href = '../customer/dashboard.html';
-                }
+                window.location.href = buildDashboardPath(user.role);
                 return false;
             }
         }
@@ -40,7 +85,7 @@ async function requireAuth(requiredRole = null) {
     } catch (error) {
         console.error('Auth check failed:', error);
         TokenManager.removeToken();
-        window.location.href = '../auth/login.html';
+        window.location.href = buildLoginPath();
         return false;
     }
 }
@@ -160,7 +205,7 @@ async function handleLogout() {
         console.error('Logout error:', error);
     } finally {
         TokenManager.removeToken();
-        window.location.href = '../auth/login.html';
+        window.location.href = buildLoginPath();
     }
 }
 
