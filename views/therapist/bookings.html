@@ -182,12 +182,21 @@
 
         async function toggleAvailability() {
             try {
-                await therapistAPI.toggleAvailability();
-                isAvailable = !isAvailable;
+                const response = await therapistAPI.toggleAvailability();
+                // Use the response from API to update the state
+                if (response && response.is_available !== undefined) {
+                    isAvailable = response.is_available;
+                } else {
+                    // Fallback: toggle locally if API doesn't return the value
+                    isAvailable = !isAvailable;
+                }
                 updateAvailabilityButton();
+                // Reload bookings to ensure everything is in sync
+                await loadBookings();
             } catch (error) {
                 console.error('Error toggling availability:', error);
-                alert('Failed to toggle availability. Please try again.');
+                const errorMessage = error.message || 'Failed to toggle availability. Please try again.';
+                alert(errorMessage);
             }
         }
 
