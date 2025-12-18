@@ -360,8 +360,37 @@
             });
         }
 
+        async function checkForDuplicateBooking(bookingDate, bookingTime, serviceType) {
+            try {
+                // Get all existing bookings
+                const response = await bookingAPI.getAll();
+                const bookings = response.bookings || [];
+                
+                // Check if there's a duplicate
+                const duplicate = bookings.find(booking => {
+                    const bookingDateStr = new Date(booking.booking_date).toISOString().split('T')[0];
+                    const bookingTimeStr = booking.booking_time;
+                    // Handle both time formats (HH:mm:ss and HH:mm)
+                    const normalizedTime = bookingTimeStr.length > 5 ? bookingTimeStr.substring(0, 5) : bookingTimeStr;
+                    const normalizedInputTime = bookingTime.length > 5 ? bookingTime.substring(0, 5) : bookingTime;
+                    
+                    return bookingDateStr === bookingDate && 
+                           normalizedTime === normalizedInputTime && 
+                           booking.service_type === serviceType;
+                });
+                
+                return duplicate !== undefined;
+            } catch (error) {
+                console.error('Error checking for duplicate booking:', error);
+                // If check fails, let backend handle it
+                return false;
+            }
+        }
+
         function setupFormValidation() {
             const bookingDateInput = document.getElementById('booking_date');
+            const bookingTimeInput = document.getElementById('booking_time');
+            const serviceTypeInput = document.getElementById('service_type');
             const form = document.getElementById('bookingForm');
             
             bookingDateInput.addEventListener('change', function() {
@@ -399,6 +428,17 @@
                     return;
                 }
 
+                const bookingDate = bookingDateInput.value;
+                const bookingTime = bookingTimeInput.value;
+                const serviceType = serviceTypeInput.value;
+
+                // Check for duplicate booking before submitting
+                const isDuplicate = await checkForDuplicateBooking(bookingDate, bookingTime, serviceType);
+                if (isDuplicate) {
+                    showMessage('⚠️ You already have a booking for this date, time, and massage type. Please choose a different date, time, or massage type.', 'error');
+                    return;
+                }
+
                 const submitBtn = document.getElementById('submitBtn');
                 const originalText = submitBtn.textContent;
                 submitBtn.disabled = true;
@@ -406,13 +446,13 @@
 
                 try {
                     const formData = {
-                        booking_date: bookingDateInput.value,
+                        booking_date: bookingDate,
                         therapist_id: document.getElementById('therapist_id').value,
-                        booking_time: document.getElementById('booking_time').value,
+                        booking_time: bookingTime,
                         address: document.getElementById('address').value,
                         latitude: latitude,
                         longitude: longitude,
-                        service_type: document.getElementById('service_type').value,
+                        service_type: serviceType,
                         notes: document.getElementById('notes').value
                     };
 
@@ -424,6 +464,7 @@
                     }, 1500);
                 } catch (error) {
                     console.error('Booking error:', error);
+                    // Display error message from backend (which includes duplicate booking errors)
                     showMessage(error.message || 'Failed to create booking. Please try again.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
@@ -445,3 +486,4 @@
     </script>
 </body>
 </html>
+
