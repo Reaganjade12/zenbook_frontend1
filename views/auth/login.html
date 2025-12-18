@@ -752,14 +752,41 @@
             
             // Redirect based on user role
             const role = response.user?.role || 'customer';
-            // We are currently in /views/auth/login.html, so go up one level to reach /views
-            if (role === 'staff' || role === 'super_admin') {
-                window.location.href = '../staff/dashboard.html';
-            } else if (role === 'cleaner' || role === 'therapist') {
-                window.location.href = '../therapist/dashboard.html';
-            } else {
-                window.location.href = '../customer/dashboard.html';
+            
+            // Get the base path - works for both local and GitHub Pages
+            const currentPath = window.location.pathname;
+            let basePath = '';
+            
+            // Extract base path (everything before /views/auth/login.html)
+            if (currentPath.includes('/views/auth/login.html')) {
+                basePath = currentPath.split('/views/auth/login.html')[0];
+            } else if (currentPath.includes('/views/')) {
+                // Fallback: extract up to /views/
+                basePath = currentPath.split('/views/')[0];
             }
+            
+            // Ensure basePath starts with / and doesn't end with /
+            if (basePath && !basePath.startsWith('/')) {
+                basePath = '/' + basePath;
+            }
+            if (basePath.endsWith('/')) {
+                basePath = basePath.slice(0, -1);
+            }
+            
+            // Build redirect paths with proper formatting
+            let redirectPath = '';
+            if (role === 'staff' || role === 'super_admin') {
+                redirectPath = basePath + '/views/staff/dashboard.html';
+            } else if (role === 'cleaner' || role === 'therapist') {
+                redirectPath = basePath + '/views/therapist/dashboard.html';
+            } else {
+                redirectPath = basePath + '/views/customer/dashboard.html';
+            }
+            
+            // Use full URL to ensure proper navigation
+            const fullUrl = window.location.origin + redirectPath;
+            console.log('Redirecting to:', fullUrl);
+            window.location.href = fullUrl;
             
         } catch (error) {
             console.error('Login error:', error);
@@ -773,3 +800,4 @@
 </script>
 </body>
 </html>
+
