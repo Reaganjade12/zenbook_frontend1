@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add New Admin - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../css/common-layout.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div id="main-content" style="margin-left: 260px; padding: 30px; min-height: 100vh;">
+        <div class="container">
+<div class="page-header" style="margin-bottom: 30px;">
+                <h1 style="color: var(--text-white); margin-bottom: 8px; font-size: clamp(24px, 5vw, 32px);">Add New Admin</h1>
+                <p style="color: var(--text-light); font-size: 14px;">Create a new admin account</p>
+</div>
+
+<div class="card" style="max-width: 700px; width: 100%;">
+                <div id="messageContainer"></div>
+                
+                <form id="adminForm">
+                    <h3 style="margin-bottom: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: var(--text-white);">Account Information</h3>
+        
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required>
+        </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+        </div>
+
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" required minlength="8">
+                        <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 5px;">Minimum 8 characters</small>
+        </div>
+
+                    <div class="form-group">
+                        <label for="password_confirmation">Confirm Password *</label>
+                        <input type="password" id="password_confirmation" name="password_confirmation" required>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 140px;" id="submitBtn">Create Admin</button>
+                        <a href="index.html" class="btn" style="background: rgba(15, 23, 42, 0.6); color: var(--text-white); border: 2px solid var(--dark-border); flex: 1; min-width: 140px; text-align: center; text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+        </div>
+    </div>
+
+    <script src="../../../js/api.js"></script>
+    <script src="../../../js/auth-utils.js?v=2"></script>
+    <script src="../../../js/layout-utils.js?v=2"></script>
+    <script>
+        let currentUser = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication - must be super admin
+            currentUser = await requireAuth('admin');
+            if (!currentUser) return;
+
+            // Check if user is super admin
+            if (currentUser.role !== 'super_admin') {
+                alert('Access denied. Only super admins can create admins.');
+                window.location.href = '../dashboard.html';
+                return;
+            }
+
+            injectAdminLayout({ user: currentUser, title: 'Add New Admin - ZenBook', active: 'admins' });
+
+            // Setup form submission
+            document.getElementById('adminForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating...';
+
+                const messageContainer = document.getElementById('messageContainer');
+                messageContainer.innerHTML = '';
+
+                const formData = {
+                    name: document.getElementById('name').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    password: document.getElementById('password').value,
+                    password_confirmation: document.getElementById('password_confirmation').value,
+                };
+
+                try {
+                    await superAdminAPI.createAdmin(formData);
+                    messageContainer.innerHTML = `
+                        <div class="alert alert-success" style="margin-bottom: 20px;">
+                            Admin created successfully! Redirecting...
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('Error creating admin:', error);
+                    messageContainer.innerHTML = `
+                        <div class="alert alert-danger" style="margin-bottom: 20px;">
+                            ${escapeHtml(error.message || 'Failed to create admin. Please try again.')}
+                        </div>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
