@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Bookings - ZenBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/common-layout.css">
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div class="container">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+                <div style="flex: 1; min-width: 200px;">
+                    <h1 style="margin: 0; font-size: clamp(24px, 5vw, 36px);">My Massage Bookings</h1>
+                    <p style="color: var(--text-light); margin-top: 5px; font-size: 14px;">Manage your appointments</p>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%; max-width: 100%;">
+                    <a href="../../profile/show.html" class="btn" style="background: rgba(15, 23, 42, 0.6); color: var(--text-white); border: 2px solid var(--dark-border); flex: 1; min-width: 120px;">
+                        Profile
+                    </a>
+                    <a href="create-booking.html" class="btn btn-primary" style="flex: 1; min-width: 140px;">
+                        Book New Session
+                    </a>
+                </div>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-status="">All</button>
+                <button class="filter-btn" data-status="pending">Pending</button>
+                <button class="filter-btn" data-status="approved">Approved</button>
+                <button class="filter-btn" data-status="declined">Declined</button>
+                <button class="filter-btn" data-status="in_progress">In Progress</button>
+                <button class="filter-btn" data-status="completed">Completed</button>
+                <button class="filter-btn" data-status="cancelled">Cancelled</button>
+            </div>
+
+            <div id="bookings-container">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading bookings...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/api.js"></script>
+    <script src="../../js/auth-utils.js"></script>
+    <script src="../../js/layout-utils.js"></script>
+    <script>
+        let currentStatus = '';
+        let currentUser = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            currentUser = await requireAuth('customer');
+            if (!currentUser) return;
+
+            // Load navbar
+            const navbarContainer = document.getElementById('navbar-container');
+            navbarContainer.innerHTML = generateNavbar(currentUser);
+
+            // Get status from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            currentStatus = urlParams.get('status') || '';
+
+            // Update active filter button
+            updateFilterButtons();
+
+            // Load bookings
+            await loadBookings();
+
+            // Setup filter button handlers
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    currentStatus = this.dataset.status || '';
+                    updateFilterButtons();
+                    loadBookings();
+                    // Update URL without reload
+                    const url = new URL(window.location);
+                    if (currentStatus) {
+                        url.searchParams.set('status', currentStatus);
+                    } else {
+                        url.searchParams.delete('status');
+                    }
+                    window.history.pushState({}, '', url);
+                });
+            });
+        });
+
+        function updateFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.status === currentStatus) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadBookings() {
+            const container = document.getElementById('bookings-container');
+            
+            // Show loading
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">⏳</div>
+                    <p style="color: var(--text-light);">Loading bookings...</p>
+                </div>
+            `;
+
+            try {
+                const response = await bookingAPI.getDashboard(currentStatus || null);
+                let bookings = response.bookings || [];
+
+                // Sort bookings by status priority: pending, approved, in_progress, completed, cancelled, declined
+                const statusPriority = {
+                    'pending': 1,
+                    'approved': 2,
+                    'in_progress': 3,
+                    'completed': 4,
+                    'cancelled': 5,
+                    'declined': 6
+                };
+
+                bookings.sort((a, b) => {
+                    const priorityA = statusPriority[a.status] || 99;
+                    const priorityB = statusPriority[b.status] || 99;
+                    
+                    if (priorityA !== priorityB) {
+                        return priorityA - priorityB;
+                    }
+                    
+                    const dateA = new Date(a.booking_date + ' ' + a.booking_time);
+                    const dateB = new Date(b.booking_date + ' ' + b.booking_time);
+                    return dateA - dateB;
+                });
+
+                if (bookings.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(20px, 4vw, 24px);">No bookings yet</h3>
+                            <p style="color: var(--text-light); margin-bottom: 30px; font-size: 14px;">Start your wellness journey by booking your first massage session</p>
+                            <a href="create-booking.html" class="btn btn-primary" style="max-width: 300px; margin: 0 auto;">Book Your First Session</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Build table
+                let tableHTML = `
+                    <div style="overflow-x: auto;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Massage Type</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Therapist</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                bookings.forEach(booking => {
+                    const bookingDate = new Date(booking.booking_date);
+                    const formattedDate = bookingDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const formattedTime = formatTime(booking.booking_time);
+                    const createdDate = new Date(booking.created_at);
+                    const formattedCreated = createdDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+                    
+                    const address = booking.address || '';
+                    const shortAddress = address.length > 30 ? address.substring(0, 30) + '...' : address;
+                    
+                    const therapistName = booking.therapist 
+                        ? escapeHtml(booking.therapist.name) 
+                        : (booking.cleaner ? escapeHtml(booking.cleaner.name) : '<span style="color: var(--text-light);">Not assigned</span>');
+                    
+                    const statusClass = getStatusBadgeClass(booking.status);
+                    const statusText = formatStatus(booking.status);
+
+                    // Show cancel button only if booking is not completed or already cancelled
+                    const canCancel = booking.status !== 'completed' && booking.status !== 'cancelled';
+                    const cancelButton = canCancel 
+                        ? `<button onclick="cancelBooking(${booking.id})" class="btn" style="background: #ef4444; color: white; padding: 6px 12px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer;">Cancel</button>`
+                        : '<span style="color: var(--text-light); font-size: 13px;">-</span>';
+
+                    tableHTML += `
+                        <tr>
+                            <td data-label="Date" style="font-weight: 500;">${escapeHtml(formattedDate)}</td>
+                            <td data-label="Time">${escapeHtml(formattedTime)}</td>
+                            <td data-label="Massage Type" style="font-weight: 500;">${escapeHtml(typeof formatMassageType === 'function' ? formatMassageType(booking.service_type) : booking.service_type)}</td>
+                            <td data-label="Location">${escapeHtml(shortAddress)}</td>
+                            <td data-label="Status">
+                                <span class="badge ${statusClass}">
+                                    ${escapeHtml(statusText)}
+                                </span>
+                            </td>
+                            <td data-label="Therapist" style="color: var(--text-white);">${therapistName}</td>
+                            <td data-label="Created" style="color: var(--text-light); font-size: 13px;">${escapeHtml(formattedCreated)}</td>
+                            <td data-label="Actions">${cancelButton}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                container.innerHTML = tableHTML;
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                        <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700;">Error Loading Bookings</h3>
+                        <p style="color: var(--text-light); margin-bottom: 30px; font-size: 14px;">${escapeHtml(error.message || 'Failed to load bookings. Please try again.')}</p>
+                        <button onclick="loadBookings()" class="btn btn-primary">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        async function cancelBooking(bookingId) {
+            if (!confirm('Are you sure you want to cancel this booking?')) {
+                return;
+            }
+
+            try {
+                await bookingAPI.cancel(bookingId);
+                // Reload bookings to show updated status
+                await loadBookings();
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                alert(error.message || 'Failed to cancel booking. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
